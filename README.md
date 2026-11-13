@@ -43,7 +43,36 @@ O arquivo será gerado em `build/libs/`.
 3. No chat, execute `/rpgstatus`.
 4. Verifique se a mensagem de confirmação do protótipo aparece.
 
-O comando apenas demonstra que o mod carregou e que eventos do servidor estão funcionando. **Ainda não existe um sistema de evolução de personagem**.
+O comando verifica se o mod carregou. Também existe agora uma **primeira implementação experimental de evolução de personagem**, separada do XP de encantamento do Minecraft.
+
+## Progressão individual (protótipo)
+
+- Todos começam no **nível 1**.
+- Matar um **monstro hostil** concede **20 XP de RPG** ao jogador responsável pela morte.
+- O próximo nível custa **100 XP** no início e cresce **25 XP** por nível.
+- **Nível máximo: 50**; ao atingi-lo, não são concedidos mais pontos de XP RPG.
+- A experiência é **persistida por jogador** e preservada ao morrer.
+- São valores provisórios para validar a implementação, não o balanceamento final do RPG.
+
+### Comandos
+
+| Comando | Quem pode usar | O que faz |
+| --- | --- | --- |
+| `/rpg` | Qualquer jogador | Mostra nível e progresso |
+| `/rpg profile` | Qualquer jogador | Mesmo resultado, forma explícita |
+| `/rpg xp add <jogador> <quantidade>` | OP nível 2+ | Concede XP RPG para testes |
+| `/rpgstatus` | Qualquer jogador | Confirma que o mod carregou |
+
+### Teste manual recomendado
+
+1. Inicie um mundo com o mod e execute `/rpg profile` (nível 1 e 0/100 XP).
+2. Mate **5 zumbis**: o XP deve chegar a 100 e o nível a 2.
+3. Execute `/rpg xp add SeuNick 125` com trapaças habilitadas ou OP: deve alcançar o nível 3.
+4. Saia e entre no mundo novamente; confirme que o nível permanece.
+5. Morra e reapareça; confirme que o nível permanece.
+6. Em multiplayer, confirme que outro jogador tem progressão independente.
+
+**Ainda não implementamos atributos, classes, habilidades, magia, HUD nem XP por quests.**
 
 ## Dependências auxiliares
 
@@ -62,8 +91,9 @@ Sophisticated Backpacks, Waystones, Xaero's Minimap/World Map, JEI, Jade e mods 
 
 - [x] Base NeoForge 1.21.1 / Java 21
 - [x] Comando de diagnóstico `/rpgstatus`
-- [ ] Compilação e teste no cliente confirmados
-- [ ] Definição das regras de progressão
-- [ ] Primeiro sistema jogável de RPG
+- [x] Primeira compilação validada no GitHub Actions e no cliente (confirmado pelo autor)
+- [ ] Validação da nova implementação de progressão
+- [ ] Definição do balanceamento definitivo da progressão
+- [x] Protótipo inicial de XP e níveis implementado (aguardando teste no jogo)
 
-> A compilação ainda precisa ser confirmada pelo GitHub Actions ou por um teste local.
+> O novo código de progressão só deve ser considerado validado após o build desta branch e o teste no jogo.

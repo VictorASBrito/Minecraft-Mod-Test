@@ -22,7 +22,7 @@ Conforme implementarmos sistemas reais, organizar pacotes por responsabilidade:
 - `network/` — sincronização cliente-servidor, quando necessária.
 - `client/` — interface e renderização no lado cliente.
 
-Esses pacotes **ainda não foram criados**; são diretrizes, não funcionalidades disponíveis.
+O pacote `progression/` já foi criado com a curva de experiência, armazenamento persistente e eventos de combate. Os demais pacotes continuam como diretrizes futuras.
 
 ## Primeiro teste
 
@@ -36,3 +36,16 @@ O comando `/rpgstatus` é registrado no evento de comandos do NeoForge e respond
 - Quests próprias ou integração com FTB Quests.
 - Como persistir dados e sincronizá-los no multiplayer.
 - Organização das configurações para servidores.
+
+## Módulo inicial: progressão individual
+
+- `ExperienceCurve`: converte XP total em nível e progresso sem dependência do Minecraft.
+- `ProgressionAttachments`: armazena XP total em *data attachment* do jogador, com `Codec.INT`, persistência e `copyOnDeath()`.
+- `ProgressionService`: autoridade do servidor para consultar e conceder XP.
+- `ProgressionEvents`: recompensa provisória de 20 XP ao derrotar monstros hostis.
+- `RpgProgressionCommand`: consulta pessoal e concessão de XP protegida por permissão de operador.
+- `ExperienceCurveTest`: testes unitários da matemática de experiência.
+
+O XP de RPG **não substitui nem altera** níveis ou orbes de experiência vanilla. Não há sincronização geral cliente-servidor do dado de XP: a interface atual usa mensagens enviadas pelo servidor. Quando houver HUD, será preciso criar um canal de sincronização próprio.
+
+Regra provisória: nível inicial 1, máximo 50, custo inicial 100 XP e incremento de 25 XP por nível. XP persistente é armazenado como valor total cumulativo, com teto de 34.300 XP. O sistema poderá ser substituído por regras de progressão de RPG decididas posteriormente.
