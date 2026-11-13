@@ -24,6 +24,7 @@ public final class MinecraftModTest {
         NeoForge.EVENT_BUS.addListener(BattleCommands::register);
         NeoForge.EVENT_BUS.addListener(BattleSessionManager::onLogout);
         NeoForge.EVENT_BUS.addListener(BattleSessionManager::onPlayerTick);
+        NeoForge.EVENT_BUS.addListener(BattleSessionManager::onInvulnerabilityCheck);
         NeoForge.EVENT_BUS.addListener(BattleWorldFixture::onJoin);
         NeoForge.EVENT_BUS.addListener(BattleSessionManager::onServerStopped);
         modEventBus.addListener(BattleNetwork::register);
