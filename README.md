@@ -67,3 +67,41 @@ Sophisticated Backpacks, Waystones, Xaero's Minimap/World Map, JEI, Jade e mods 
 - [ ] Primeiro sistema jogável de RPG
 
 > A compilação ainda precisa ser confirmada pelo GitHub Actions ou por um teste local.
+
+## Batalha de teste por turnos (MVP)
+
+O motor de batalha experimental possui **iniciativa dinâmica por velocidade**.
+O jogo abre uma tela de combate com botões funcionais; o servidor resolve o resultado.
+**Ainda não são encontros com monstros reais.**
+
+### Como experimentar
+
+1. Com **Minecraft 1.21.1, NeoForge 21.1.265 e Java 21**, inicie o ambiente com `./gradlew runClient` (Windows: `.\\gradlew.bat runClient`).
+2. Entre em um mundo, em um lugar seguro. O mod **não interrompe os ticks do mundo** e a janela experimental não deixa o avatar fisicamente invulnerável.
+3. Execute `/battle test` no chat (comando disponível para jogador normal).
+4. Uma tela com **Você vs Zumbi (simulado)** aparecerá.
+5. Use **Atacar** (30 de dano, custo de iniciativa 1000) ou **Defender** (reduz o próximo dano recebido de 18 para 9, custo 700).
+6. O servidor usa velocidade 120 para jogador, 70 para zumbi, 120 HP vs 90 HP.
+7. Ao vencer, perder ou selecionar **Sair do teste**, use **Fechar**.
+8. `/battle resume` reabre uma sessão ativa, e `/battle cancel` termina uma sessão ativa.
+
+O cálculo de iniciativa é **lógico**, não por tempo real: uma escolha pode esperar o tempo necessário, enquanto o restante do servidor continua funcionando.
+
+### Duas apresentações (protótipos 2D)
+
+- **Visão elevada:** ambos os personagens em lados opostos do campo.
+- **Visão por trás:** personagem maior em primeiro plano, zumbi ao fundo.
+
+Na tela, use o botão de visão no canto superior direito. O último layout é salvo em `config/minecraft_mod_test-battle-view.properties` para as batalhas futuras, inclusive após reiniciar o jogo.
+
+**Atenção:** nesta versão as duas perspectivas são **esquemas gráficos 2D**, não câmeras 3D que renderizam as entidades reais. Isso será desenvolvido numa fase posterior.
+
+### Segurança e limitações
+
+- Não altera HP, inventário, IA, posição ou XP de entidades do mundo.
+- Não concede recompensas nem XP pelo zumbi simulado.
+- Cada jogador só pode ter uma sessão de teste por vez, em memória, encerrada ao desconectar ou parar o servidor.
+- Pacotes de ação incluem ID da sessão e ID do turno; comandos duplicados ou fora de turno são ignorados no servidor.
+- **Ainda não implementados:** detecção/aggro, agrupamento de mobs, reforços, escolha de alvos, multiplayer cooperativo, modelos 3D e a integração com o sistema de progressão do PR #2.
+
+Confira também [documentação e roteiro de testes do motor](docs/MVP-BATTLE.md).

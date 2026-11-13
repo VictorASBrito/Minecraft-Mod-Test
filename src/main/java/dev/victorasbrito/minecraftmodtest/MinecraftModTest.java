@@ -2,6 +2,9 @@ package dev.victorasbrito.minecraftmodtest;
 
 import com.mojang.logging.LogUtils;
 import dev.victorasbrito.minecraftmodtest.command.RpgStatusCommand;
+import dev.victorasbrito.minecraftmodtest.battle.command.BattleCommands;
+import dev.victorasbrito.minecraftmodtest.battle.network.BattleNetwork;
+import dev.victorasbrito.minecraftmodtest.battle.server.BattleSessionManager;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
@@ -17,6 +20,10 @@ public final class MinecraftModTest {
 
     public MinecraftModTest(IEventBus modEventBus) {
         NeoForge.EVENT_BUS.addListener(RpgStatusCommand::register);
+        NeoForge.EVENT_BUS.addListener(BattleCommands::register);
+        NeoForge.EVENT_BUS.addListener(BattleSessionManager::onLogout);
+        NeoForge.EVENT_BUS.addListener(BattleSessionManager::onServerStopped);
+        modEventBus.addListener(BattleNetwork::register);
         LOGGER.info("Minecraft Mod Test carregado (Minecraft 1.21.1 / NeoForge).");
     }
 }
