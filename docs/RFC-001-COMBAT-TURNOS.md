@@ -2,11 +2,11 @@
 
 **Status:** Proposta de arquitetura (não implementada)  
 **Projeto:** Minecraft Mod Test — Minecraft 1.21.1 / NeoForge / Java 21  
-**Escopo:** Batalhas táticas em apresentação lateral 2.5D, integradas a RPG sem classes obrigatórias.
+**Escopo:** Batalhas táticas em apresentação 3D/2.5D, integradas a RPG sem classes obrigatórias, com duas câmeras alternáveis. A especificação visual detalhada e os encontros estão na [RFC-002](./RFC-002-TELA-COMBATE-E-ENCONTROS.md).
 
 ## 1. Decisões já tomadas
 
-1. O jogador explora, minera e constrói no Minecraft convencional, mas o combate RPG terá uma interface lateral inspirada em JRPGs clássicos.
+1. O jogador explora, minera e constrói no Minecraft convencional, mas o combate RPG terá **duas visões selecionáveis**: lateral elevada/oblíqua e atrás do personagem ativo, com menus ao seu redor (detalhes na RFC-002).
 2. Os turnos não serão rodadas fixas. O combate usa **iniciativa dinâmica baseada em velocidade**, com ações capazes de adiantar ou atrasar o próximo turno.
 3. O jogador **não fica preso a uma classe**. Sua build é formada por disciplinas, habilidades ativas, passivas e especializações.
 4. **Não será possível maximizar todas as árvores simultaneamente.** Existem limites de afinidade, pontos e capacidade de passivas.
@@ -15,7 +15,7 @@
 
 ## 2. Conceito de experiência
 
-- **Exploração:** gameplay convencional de Minecraft; encontro iniciado por evento explícito/controlado.
+- **Exploração:** gameplay convencional de Minecraft; **encontros iniciados pela detecção de inimigos hostis**, desde que o servidor valide alvo/aggro e critérios de aproximação, elegibilidade e proteção contra encontros excessivos (RFC-002). O protótipo usa comando manual somente para teste.
 - **Transição:** o cliente recebe estado de batalha e exibe cena lateral.
 - **Batalha:** jogadores e inimigos agem em turnos por iniciativa, com ações e alvos validados no servidor.
 - **Conclusão:** recompensas/XP são concedidos uma única vez; personagens retornam ao controle normal.
@@ -69,7 +69,7 @@ Entidades previstas:
 
 ## 5. Apresentação lateral (proposta)
 
-**Primeira entrega:** tela `BattleScreen` simples, com retratos/representações provisórias, turn order, ações, seleção de alvo e feedback. Sem câmera livre, sem teleporte e sem tentar alterar o renderizador global.
+**Primeira entrega:** tela `BattleScreen` simples, com retratos/representações provisórias, turn order, ações, seleção de alvo e feedback. A interface final deve oferecer **visão lateral elevada** e **visão atrás do personagem** com comandos ao redor, alternáveis durante a batalha. Implementar inicialmente uma visão no MVP e concluir ambas antes de considerar o marco visual completo. Sem teleporte e sem alterar globalmente o renderizador fora do combate. Ver [RFC-002](./RFC-002-TELA-COMBATE-E-ENCONTROS.md).
 
 **Etapa posterior:** modelos 3D das entidades em cena 2.5D, animações, efeitos de habilidades, fundos que remetem ao bioma de origem, transições e áudio.
 
@@ -142,11 +142,11 @@ Integração futura:
 
 ## 11. Pontos para fechar com o autor do mod
 
-1. Encontros começam por **contato/aggro**, comando de interação, ou ambos?
+1. **Decidido:** encontros reais começam quando inimigos hostis detectam o jogador, com regras de aproximação/aggro validadas no servidor. **Em aberto:** raio, período de detecção, agrupamento e cooldown (RFC-002).
 2. Inimigos do mundo ficam no lugar, congelados/protegidos, ou devemos criar uma dimensão/arena física?
 3. Batalhas com outros jogadores: adesão automática, convite ou apenas participantes próximos?
 4. Definição de derrota, fuga, desconexão e timeout.
-5. Interface 2.5D: estilo visual dos modelos 3D, cenário e animações.
+5. **Decidido:** duas perspectivas alternáveis (lateral elevada e atrás do personagem com menu ao redor). **Em aberto:** câmera padrão, animações, atalhos e detalhes visuais (RFC-002).
 6. Custo da redefinição de afinidades e progressão que persiste após a troca.
 
 ## Referências técnicas
