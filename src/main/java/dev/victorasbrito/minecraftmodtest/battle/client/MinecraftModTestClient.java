@@ -13,6 +13,11 @@ public final class MinecraftModTestClient {
         modEventBus.addListener(BattleHudOverlay::register);
         modEventBus.addListener(ClientBattleControls::registerKeys);
         NeoForge.EVENT_BUS.addListener(ClientBattleControls::onTick);
+        NeoForge.EVENT_BUS.addListener(ClientBattleControls::onMovementInput);
+        NeoForge.EVENT_BUS.addListener(ClientBattleControls::onInteractionKey);
+        NeoForge.EVENT_BUS.addListener(ClientBattleControls::onMouseButton);
+        NeoForge.EVENT_BUS.addListener(ClientBattleControls::onMouseScroll);
+        NeoForge.EVENT_BUS.addListener(ClientBattleControls::onScreenOpening);
         NeoForge.EVENT_BUS.addListener(BattleHudOverlay::hideVanillaCrosshair);
     }
 }

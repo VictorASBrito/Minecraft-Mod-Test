@@ -15,7 +15,8 @@ public record BattleStatePayload(
         boolean guarding, boolean playerTurn,
         String outcome, String combatLog, String turnPreview,
         double playerX, double playerY, double playerZ,
-        double enemyX, double enemyY, double enemyZ
+        double enemyX, double enemyY, double enemyZ,
+        int actionSequence, String resolvedAction
 ) implements CustomPacketPayload {
     public static final Type<BattleStatePayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(MinecraftModTest.MOD_ID, "battle_state"));
@@ -44,6 +45,8 @@ public record BattleStatePayload(
         buf.writeDouble(s.enemyX);
         buf.writeDouble(s.enemyY);
         buf.writeDouble(s.enemyZ);
+        buf.writeVarInt(s.actionSequence);
+        buf.writeUtf(s.resolvedAction, 16);
     }
 
     private static BattleStatePayload read(RegistryFriendlyByteBuf buf) {
@@ -54,7 +57,8 @@ public record BattleStatePayload(
                 buf.readBoolean(), buf.readBoolean(),
                 buf.readUtf(16), buf.readUtf(512), buf.readUtf(128),
                 buf.readDouble(), buf.readDouble(), buf.readDouble(),
-                buf.readDouble(), buf.readDouble(), buf.readDouble()
+                buf.readDouble(), buf.readDouble(), buf.readDouble(),
+                buf.readVarInt(), buf.readUtf(16)
         );
     }
 

@@ -6,6 +6,8 @@ import dev.victorasbrito.minecraftmodtest.battle.network.BattleStatePayload;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.world.InteractionHand;
+import dev.victorasbrito.minecraftmodtest.battle.engine.BattleTargeting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.monster.Zombie;
@@ -54,6 +56,11 @@ public final class BattleSessionManager {
         send(player, session);
     }
 
+    /** Usado somente pelos guardas de interacao no lado logico do servidor. */
+    public static boolean isInBattle(ServerPlayer player) {
+        return SESSIONS.containsKey(player.getUUID());
+    }
+
     public static boolean resume(ServerPlayer player) {
         Session session = SESSIONS.get(player.getUUID());
         if (session == null) return false;
@@ -90,6 +97,14 @@ public final class BattleSessionManager {
             return;
         }
 
+        // Animacao/visual somente apos a acao ter sido ACEITA pelo servidor.
+        session.actionSequence++;
+        session.resolvedAction = action.name();
+        if (action == BattleEngine.Action.ATTACK) {
+            faceEachOther(player, session.zombie);
+            player.swing(InteractionHand.MAIN_HAND, true);
+        }
+
         send(player, session);
         if (session.engine.outcome() != BattleEngine.Outcome.ACTIVE) {
             end(player, session);
@@ -116,8 +131,8 @@ public final class BattleSessionManager {
     }
 
     private static void faceEachOther(ServerPlayer player, Zombie zombie) {
-        Vec3 diff = zombie.position().subtract(player.position());
-        float toEnemy = (float) Math.toDegrees(Math.atan2(-diff.x, diff.z));
+        float toEnemy = BattleTargeting.yawTowards(
+                player.getX(), player.getZ(), zombie.getX(), zombie.getZ());
         player.setYRot(toEnemy);
         player.setYHeadRot(toEnemy);
         player.setYBodyRot(toEnemy);
@@ -135,7 +150,8 @@ public final class BattleSessionManager {
                 e.playerSpeed(), e.enemySpeed(), e.playerGauge(), e.enemyGauge(),
                 e.isGuarding(), e.isPlayerTurn(), e.outcome().name(),
                 e.combatLog(), e.previewTurns(5),
-                a.x, a.y, a.z, b.x, b.y, b.z
+                a.x, a.y, a.z, b.x, b.y, b.z,
+                session.actionSequence, session.resolvedAction
         ));
     }
 
@@ -176,6 +192,8 @@ public final class BattleSessionManager {
         final Zombie zombie;
         final Vec3 playerAnchor;
         final Vec3 enemyAnchor;
+        int actionSequence;
+        String resolvedAction = "";
 
         Session(String id, BattleEngine engine, Zombie zombie, Vec3 playerAnchor,
                 Vec3 enemyAnchor) {
