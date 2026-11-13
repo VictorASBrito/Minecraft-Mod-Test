@@ -75,6 +75,20 @@ public final class BattleScreen extends Screen {
         return false; // Sair por "Sair do teste" para encerrar no servidor.
     }
 
+
+    /**
+     * A implementação de Screen#render chama renderBackground antes dos widgets.
+     * Como esta interface desenha seu próprio fundo em render(), o método padrão
+     * aplicaria blur DEPOIS dos textos e personagens, deixando tudo embaçado
+     * enquanto os botões (desenhados posteriormente) permaneceriam nítidos.
+     *
+     * Não aplicar a rotina de background/blur do Minecraft aqui.
+     */
+    @Override
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        // O fundo opaco/escuro é renderizado no início de render().
+    }
+
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         graphics.fill(0, 0, width, height, 0xEF0A1520);
