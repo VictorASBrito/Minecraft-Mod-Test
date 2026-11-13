@@ -68,40 +68,49 @@ Sophisticated Backpacks, Waystones, Xaero's Minimap/World Map, JEI, Jade e mods 
 
 > A compilação ainda precisa ser confirmada pelo GitHub Actions ou por um teste local.
 
-## Batalha de teste por turnos (MVP)
+## Batalha no próprio mundo — câmera 3D real (MVP 2)
 
-O motor de batalha experimental possui **iniciativa dinâmica por velocidade**.
-O jogo abre uma tela de combate com botões funcionais; o servidor resolve o resultado.
-**Ainda não são encontros com monstros reais.**
+O comando `/battle test` agora **não abre uma tela de batalha separada**: utiliza a renderização 3D do próprio Minecraft. O servidor posiciona **um zumbi real, imobilizado e protegido** próximo do jogador e mantém ambos nos locais iniciais enquanto o combate está ativo. A batalha usa atributos/HP **simulados** pelo `BattleEngine`, e não causa dano nem oferece XP/drops vanilla.
 
-### Como experimentar
+O cliente mantém **o jogador como entidade da câmera**, usa terceira pessoa e aplica posição e direção no final de `Camera.setup` via Mixin. A arquitetura aproveita a abordagem pública do Cobblemon Cinematics, sem exigir o Cobblemon como dependência. As duas perspectivas disponíveis são:
+- **Elevada/oblíqua:** enquadra jogador, zumbi e terreno em uma vista lateral a partir de uma posição alta;
+- **Por trás:** enquadra o jogador de costas, com o zumbi à frente.
 
-1. Com **Minecraft 1.21.1, NeoForge 21.1.265 e Java 21**, inicie o ambiente com `./gradlew runClient` (Windows: `.\\gradlew.bat runClient`).
-2. Entre em um mundo, em um lugar seguro. O mod **não interrompe os ticks do mundo** e a janela experimental não deixa o avatar fisicamente invulnerável.
-3. Execute `/battle test` no chat (comando disponível para jogador normal).
-4. Uma tela com **Você vs Zumbi (simulado)** aparecerá.
-5. Use **Atacar** (30 de dano, custo de iniciativa 1000) ou **Defender** (reduz o próximo dano recebido de 18 para 9, custo 700).
-6. O servidor usa velocidade 120 para jogador, 70 para zumbi, 120 HP vs 90 HP.
-7. Ao vencer, perder ou selecionar **Sair do teste**, use **Fechar**.
-8. `/battle resume` reabre uma sessão ativa, e `/battle cancel` termina uma sessão ativa.
+A câmera não utiliza mais `FIRST_PERSON`: o avatar completo deve aparecer no mundo. O enquadramento também testa colisão com blocos. A câmera inicial é a última usada no cliente. A preferência fica em `config/minecraft_mod_test-battle-view.properties` e é restaurada após reiniciar o jogo. O antigo `BattleScreen` foi substituído por uma **HUD renderizada diretamente sobre o mundo**.
 
-O cálculo de iniciativa é **lógico**, não por tempo real: uma escolha pode esperar o tempo necessário, enquanto o restante do servidor continua funcionando.
+### Controles de teste (configuráveis em Opções > Controles)
 
-### Duas apresentações (protótipos 2D)
+| Tecla | Função |
+|---|---|
+| `J` | Atacar |
+| `K` | Defender |
+| `L` | Fugir / sair da batalha |
+| `V` | Alternar entre as duas câmeras |
 
-- **Visão elevada:** ambos os personagens em lados opostos do campo.
-- **Visão por trás:** personagem maior em primeiro plano, zumbi ao fundo.
+### Teste
 
-Na tela, use o botão de visão no canto superior direito. O último layout é salvo em `config/minecraft_mod_test-battle-view.properties` para as batalhas futuras, inclusive após reiniciar o jogo.
+1. Use um **mundo de teste** e procure um local plano, com chão e dois blocos livres na frente.
+2. Inicie o mod com `./gradlew runClient` (Windows: `.\\gradlew.bat runClient`).
+3. Entre no mundo e execute `/battle test`. O servidor tentará colocar um zumbi real a aproximadamente quatro blocos do jogador.
+4. Veja se a câmera mostra **o próprio mapa**, os blocos, seu avatar e o zumbi.
+5. Pressione `V` para alternar as posições de câmera. Use `J` e `K` para resolver os turnos.
+6. Vença a batalha ou pressione `L` para sair. A câmera original deve ser restaurada e o zumbi de teste removido.
+7. Inicie outra batalha e verifique a preferência de câmera.
 
-**Atenção:** nesta versão as duas perspectivas são **esquemas gráficos 2D**, não câmeras 3D que renderizam as entidades reais. Isso será desenvolvido numa fase posterior.
+`/battle resume` reenvia um snapshot se houver batalha ativa; `/battle cancel` cancela no servidor.
 
-### Segurança e limitações
+**Importante:** nesta etapa o zumbi é uma entidade real **usada como representação visual**, mas os pontos de vida/danos ainda são os da simulação. Ainda não estamos iniciando encontros automaticamente por aggro, nem aplicando dano físico real, agrupamento, reforços ou XP. Isso virá depois de validar câmera, HUD, contenção de entidades e servidor dedicado.
 
-- Não altera HP, inventário, IA, posição ou XP de entidades do mundo.
-- Não concede recompensas nem XP pelo zumbi simulado.
-- Cada jogador só pode ter uma sessão de teste por vez, em memória, encerrada ao desconectar ou parar o servidor.
-- Pacotes de ação incluem ID da sessão e ID do turno; comandos duplicados ou fora de turno são ignorados no servidor.
-- **Ainda não implementados:** detecção/aggro, agrupamento de mobs, reforços, escolha de alvos, multiplayer cooperativo, modelos 3D e a integração com o sistema de progressão do PR #2.
+Ao iniciar uma batalha, somente o jogador envolvido recebe proteção temporária de dano e imobilização; essas propriedades são restauradas ao encerrar o teste. Outros jogadores e o mundo continuam funcionando. Para evitar efeitos inesperados em mundos importantes, não use essa implementação experimental fora de um ambiente de teste.
 
-Confira também [documentação e roteiro de testes do motor](docs/MVP-BATTLE.md).
+Consulte também [o plano de testes do combate in-world](docs/MVP-BATTLE.md).
+
+### Correção da câmera após o primeiro teste visual
+
+As capturas mostraram o braço de primeira pessoa e os participantes fora do quadro. A câmera virtual `ArmorStand` foi substituída por transformações aplicadas diretamente a `Camera.setup`, mantendo o jogador como origem do render e forçando `THIRD_PERSON_BACK` somente durante a batalha.
+
+A mira vanilla é ocultada enquanto a sessão estiver ativa. A perspectiva original do jogador é restaurada ao encerrar.
+
+Referência técnica: [Cobblemon Cinematics](https://github.com/P1neapplell0/Cobblemon-Cinematics). Não há dependência de Cobblemon.
+
+**Necessário reteste no Minecraft:** o build verifica Java e testes automatizados, mas não garante o enquadramento visual real.
