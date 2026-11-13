@@ -2,7 +2,7 @@
 
 **Status:** Proposta de arquitetura (não implementada)  
 **Projeto:** Minecraft Mod Test — Minecraft 1.21.1 / NeoForge / Java 21  
-**Escopo:** Batalhas táticas em apresentação 3D/2.5D, integradas a RPG sem classes obrigatórias, com duas câmeras alternáveis. A especificação visual detalhada e os encontros estão na [RFC-002](./RFC-002-TELA-COMBATE-E-ENCONTROS.md).
+**Escopo:** Batalhas táticas em apresentação 3D/2.5D, integradas a RPG sem classes obrigatórias, com duas câmeras alternáveis. Ver [RFC-002: câmeras e detecção](./RFC-002-TELA-COMBATE-E-ENCONTROS.md) e [RFC-003: grupos e reforços](./RFC-003-GRUPOS-E-REFORCOS.md).
 
 ## 1. Decisões já tomadas
 
@@ -12,10 +12,11 @@
 4. **Não será possível maximizar todas as árvores simultaneamente.** Existem limites de afinidade, pontos e capacidade de passivas.
 5. **Redefinir especializações será possível mediante custo ou desafio**, a definir depois.
 6. O estado de combate e o cálculo de efeitos pertencem ao servidor; a interface cliente apenas apresenta o estado e solicita ações.
+7. **Agrupamento:** grupo inicial é formado por proximidade, hostilidade/comportamento e orçamento de ameaça; **reforços dinâmicos com limites podem ocorrer em qualquer batalha**, conforme a [RFC-003](./RFC-003-GRUPOS-E-REFORCOS.md).
 
 ## 2. Conceito de experiência
 
-- **Exploração:** gameplay convencional de Minecraft; **encontros iniciados pela detecção de inimigos hostis**, desde que o servidor valide alvo/aggro e critérios de aproximação, elegibilidade e proteção contra encontros excessivos (RFC-002). O protótipo usa comando manual somente para teste.
+- **Exploração:** gameplay convencional de Minecraft; **encontros iniciados pela detecção de inimigos hostis**, desde que o servidor valide alvo/aggro e critérios de aproximação, elegibilidade e proteção contra encontros excessivos (RFC-002). O grupo inicial é selecionado por proximidade, comportamento e ameaça (RFC-003). O protótipo usa comando manual somente para teste.
 - **Transição:** o cliente recebe estado de batalha e exibe cena lateral.
 - **Batalha:** jogadores e inimigos agem em turnos por iniciativa, com ações e alvos validados no servidor.
 - **Conclusão:** recompensas/XP são concedidos uma única vez; personagens retornam ao controle normal.
@@ -138,15 +139,15 @@ Integração futura:
 
 **Critérios de aceitação:** nenhuma ação fora do turno; ordem reproduzível; batalha termina; cliente não calcula dano; novo encontro funciona após encerrar o anterior; servidor prossegue normalmente.
 
-**MVP 2 — Integração real**: somente após MVP 1, ligar encontros a entidades do mundo, contenção, dano/recompensa, persistência e multiplayer.
+**MVP 2 — Integração real**: somente após MVP 1, ligar encontros a entidades do mundo, contenção, dano/recompensa, persistência e multiplayer. A seleção de grupos e o sistema de reforços devem ser introduzidos primeiro como **simulações testáveis** e depois associados a mobs reais, respeitando os critérios da [RFC-003](./RFC-003-GRUPOS-E-REFORCOS.md).
 
 ## 11. Pontos para fechar com o autor do mod
 
-1. **Decidido:** encontros reais começam quando inimigos hostis detectam o jogador, com regras de aproximação/aggro validadas no servidor. **Em aberto:** raio, período de detecção, agrupamento e cooldown (RFC-002).
+1. **Decidido:** encontros reais começam quando inimigos hostis detectam o jogador; grupos iniciais são selecionados por proximidade, hostilidade e orçamento de ameaça; reforços dinâmicos podem ocorrer em toda batalha, sempre limitados. **Em aberto:** parâmetros definitivos de raio, aggro, cooldown, ameaça, ondas e facções (RFC-002 e RFC-003).
 2. Inimigos do mundo ficam no lugar, congelados/protegidos, ou devemos criar uma dimensão/arena física?
 3. Batalhas com outros jogadores: adesão automática, convite ou apenas participantes próximos?
 4. Definição de derrota, fuga, desconexão e timeout.
-5. **Decidido:** duas perspectivas alternáveis (lateral elevada e atrás do personagem com menu ao redor). **Em aberto:** câmera padrão, animações, atalhos e detalhes visuais (RFC-002).
+5. **Decidido:** duas perspectivas alternáveis (lateral elevada e atrás do personagem com menu ao redor), com persistência da **última visão usada** e lateral elevada na primeira batalha. **Em aberto:** animações, atalhos e detalhes visuais (RFC-002).
 6. Custo da redefinição de afinidades e progressão que persiste após a troca.
 
 ## Referências técnicas
