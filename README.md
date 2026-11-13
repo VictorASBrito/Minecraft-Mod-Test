@@ -1,32 +1,69 @@
 # Minecraft Mod Test
 
-Projeto experimental para desenvolvimento de um **mod de Minecraft focado em RPG, fantasia e progressão**.
+Protótipo de **mod de RPG e fantasia** para **Minecraft Java 1.21.1**, usando **NeoForge** e **Java 21**.
 
-## Visão inicial
+> O nome e o `mod_id` são provisórios. O projeto está na fase de fundação técnica; classes, magia, progressão e exploração serão especificadas antes da implementação.
 
-Construir uma experiência de RPG integrada ao Minecraft, com evolução de personagens, exploração, desafios e desbloqueios que afetam o mundo. O projeto será construído em etapas pequenas e testáveis.
+## Stack definida
 
-## Sistemas candidatos
+| Item | Escolha |
+| --- | --- |
+| Minecraft | 1.21.1 |
+| Loader | NeoForge 21.1.265 |
+| Java | JDK 21 |
+| Build | ModDevGradle 2.0.148 / Gradle 9.2.1 |
+| Mod ID provisório | `minecraft_mod_test` |
 
-- **Progressão individual:** evolução, habilidades e especializações dos personagens.
-- **Progressão global:** marcos que desbloqueiam conteúdos para o mundo ou servidor.
-- **Fantasia e combate:** magia, equipamentos, criaturas e chefes.
-- **Exploração:** locais, desafios e recompensas.
-- **Configuração:** regras ajustáveis para partidas solo e servidores.
+Os arquivos de Gradle foram adaptados do [MDK oficial de 1.21.1](https://github.com/NeoForgeMDKs/MDK-1.21.1-ModDevGradle), fixado no commit `e93d7f09d4eec12c76d1d7be9bf4eaad0246e9e0`.
 
-> São ideias em avaliação, **não funcionalidades implementadas**.
+## Como executar no Windows
 
-## Decisões técnicas pendentes
+1. Instale o **JDK 21** e o **Git**. Verifique `java -version` e `git --version`.
+2. Clone o repositório e abra um terminal PowerShell na pasta do projeto.
+3. Execute:
 
-- Versão do Minecraft.
-- Loader e respectiva versão (NeoForge é uma opção inicial).
-- Escopo do primeiro protótipo jogável.
-- Compatibilidade desejada com outros mods.
+```powershell
+.\gradlew.bat runClient
+```
 
-## Estado atual
+Na primeira execução, o script baixa automaticamente o **Gradle Wrapper JAR do MDK oficial fixado**, verifica seu hash Git e depois inicializa o Gradle. O Gradle baixará as dependências necessárias.
 
-**Planejamento inicial.** Ainda não há código Java ou build compilável.
+Para gerar o JAR do mod:
 
-## Próxima etapa
+```powershell
+.\gradlew.bat build
+```
 
-Definir a versão do jogo e o loader; depois gerar o projeto base e implementar um primeiro sistema pequeno de progressão.
+O arquivo será gerado em `build/libs/`.
+
+## Teste de funcionamento
+
+1. Inicie o cliente de desenvolvimento com `runClient`.
+2. Entre em um mundo.
+3. No chat, execute `/rpgstatus`.
+4. Verifique se a mensagem de confirmação do protótipo aparece.
+
+O comando apenas demonstra que o mod carregou e que eventos do servidor estão funcionando. **Ainda não existe um sistema de evolução de personagem**.
+
+## Dependências auxiliares
+
+Sophisticated Backpacks, Waystones, Xaero's Minimap/World Map, JEI, Jade e mods de otimização **não são dependências obrigatórias** do nosso mod. Serão testados numa instância separada conforme o desenvolvimento evoluir.
+
+## Organização
+
+- `src/main/java/` — Java do mod.
+- `src/main/resources/` — textos e recursos.
+- `src/main/templates/` — metadados gerados no build.
+- `docs/ARCHITECTURE.md` — escolhas arquiteturais.
+- `docs/ROADMAP.md` — etapas planejadas.
+- `.github/workflows/build.yml` — validação automatizada de compilação.
+
+## Status
+
+- [x] Base NeoForge 1.21.1 / Java 21
+- [x] Comando de diagnóstico `/rpgstatus`
+- [ ] Compilação e teste no cliente confirmados
+- [ ] Definição das regras de progressão
+- [ ] Primeiro sistema jogável de RPG
+
+> A compilação ainda precisa ser confirmada pelo GitHub Actions ou por um teste local.
