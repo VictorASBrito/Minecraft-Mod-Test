@@ -122,3 +122,30 @@ Durante uma sessão ativa, a câmera pode continuar em seu modo escolhido, mas *
 Ao pressionar **J**, se o servidor aceitar o ataque no turno correto, o personagem se orienta para o zumbi e executa uma animação de ataque, sem forçar a troca da câmera. O foco é temporário. Quando o combate termina, os controles normais devem voltar.
 
 **Validação pendente:** teste em jogo real (incluindo criativo, sobrevivência, multiplayer e abertura de baús). Use um mundo descartável até confirmarmos que os bloqueios não interferem em outros mods.
+
+## Interface de combate atualizada (HUD compacta)
+
+A interface deixa o centro do mundo visível e é idêntica nas câmeras lateral elevada e atrás do jogador.
+
+- **Canto superior esquerdo:** retratos do jogador e dos inimigos, em sequência de iniciativa, com a primeira ação destacada e uma seta apontando o próximo participante.
+- **Parte inferior esquerda:** retrato da skin do jogador e sua vida *simulada de RPG* (não confundir com os corações vanilla). A condição **DEFENDENDO** aparece quando aplicável.
+- **Parte inferior:** cinco ações com ícones: **Atacar**, **Habilidade**, **Defender**, **Item** e **Fugir**. Apenas Atacar [J], Defender [K] e Fugir [L] funcionam nesta fase; as demais ficam visivelmente desabilitadas.
+- **Sem informação de HP de inimigos:** removida tanto da HUD quanto dos pacotes de estado do cliente. O motor de combate do servidor continua controlando a vida do monstro.
+- **Sem título da câmera ou batalha no topo:** apenas a timeline de rostos; tecla [V] continua alternando a câmera.
+- Hotbar, mira, corações vanilla, fome, armadura e barra XP vanilla são ocultados durante a HUD de batalha e voltam depois.
+- O layout se adapta a janelas menores: status e ações ficam em duas linhas quando a largura não é suficiente.
+
+Os retratos atuais usam a skin do próprio jogador e a textura oficial do zumbi. A previsão atual ainda é 1×1, portanto **não há retratos reais de outros jogadores e criaturas no pacote de rede**; isso será feito quando implementarmos o sistema de grupos.
+
+Próxima etapa planejada: **tela de resultados** com XP do RPG, itens/drop e progressão. O zumbi de teste ainda não concede recompensas, então a HUD apenas exibe uma mensagem de vitória provisória.
+
+### Como experimentar esta versão
+
+```powershell
+git fetch origin
+git switch feature/combat-hud-redesign
+git pull --ff-only origin feature/combat-hud-redesign
+.\\gradlew.bat runClient
+```
+
+Use `/battle test` e confira os dois modos com [V]; [J] ataca, [K] defende e [L] termina o teste.

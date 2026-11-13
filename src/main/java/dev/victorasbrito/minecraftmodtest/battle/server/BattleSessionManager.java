@@ -146,7 +146,7 @@ public final class BattleSessionManager {
         Vec3 a = session.playerAnchor, b = session.enemyAnchor;
         PacketDistributor.sendToPlayer(player, new BattleStatePayload(
                 session.id, e.turnId(),
-                e.playerHp(), e.playerMaxHp(), e.enemyHp(), e.enemyMaxHp(),
+                e.playerHp(), e.playerMaxHp(),
                 e.playerSpeed(), e.enemySpeed(), e.playerGauge(), e.enemyGauge(),
                 e.isGuarding(), e.isPlayerTurn(), e.outcome().name(),
                 e.combatLog(), e.previewTurns(5),

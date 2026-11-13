@@ -18,6 +18,6 @@ public final class MinecraftModTestClient {
         NeoForge.EVENT_BUS.addListener(ClientBattleControls::onMouseButton);
         NeoForge.EVENT_BUS.addListener(ClientBattleControls::onMouseScroll);
         NeoForge.EVENT_BUS.addListener(ClientBattleControls::onScreenOpening);
-        NeoForge.EVENT_BUS.addListener(BattleHudOverlay::hideVanillaCrosshair);
+        NeoForge.EVENT_BUS.addListener(BattleHudOverlay::hideVanillaBattleLayers);
     }
 }
