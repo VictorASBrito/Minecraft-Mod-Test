@@ -77,3 +77,19 @@ Implementação: cliente com `MovementInputUpdateEvent` e `InputEvent` para impe
 - [ ] Testar logout, reinício e dois jogadores em servidor dedicado para verificar que somente o participante fica bloqueado.
 
 **Escopo:** ainda não há ataque físico do mob nem combate multiplayer; o bloqueio só é aplicado a sessões experimentais ativas.
+
+## HUD compacta — checklist de aceitação visual
+
+- [ ] Câmera atrás e lateral mostram a mesma HUD sem título superior.
+- [ ] Ordem de turnos aparece no alto à esquerda com rostos de jogador/zumbi e seta abaixo do próximo ator.
+- [ ] Vida exata do zumbi **não aparece** na UI nem está presente no pacote `BattleStatePayload`.
+- [ ] Status do jogador exibe skin, vida RPG simulada e estado de defesa quando aplicável.
+- [ ] Atacar/Defender/Fugir funcionam via J/K/L; Habilidade/Item aparecem desabilitados e não executam ações.
+- [ ] O topo central e a maior parte do mapa permanecem desobstruídos.
+- [ ] HUD vanilla (hotbar, corações, fome, XP e mira) fica oculta durante o combate e reaparece após vitória ou fuga.
+- [ ] Renderização não sobrepõe painéis em GUI scale 2/3/4 e em janela pequena.
+- [ ] O foco no inimigo e o bloqueio de movimento/interações da branch anterior continuam funcionando.
+
+### Limites do MVP
+
+A timeline atualmente usa nomes da previsão 1×1 (`Voce`/`Zumbi`) para escolher textura. Na fase de múltiplos participantes, o servidor enviará **IDs tipados, UUID e tipo de entidade** para permitir retratos corretos de outros jogadores e monstros sem inferir por texto. A futura tela de resultados não deve inventar XP ou itens enquanto o sistema de recompensas não estiver implementado.

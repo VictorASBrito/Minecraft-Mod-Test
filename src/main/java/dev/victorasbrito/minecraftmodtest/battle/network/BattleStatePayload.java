@@ -6,11 +6,15 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-/** Snapshot autoritativo com coordenadas da arena REAL no mapa. */
+/**
+ * Snapshot autoritativo de combate enviado pelo servidor ao cliente.
+ * IMPORTANTE: HP/maxHP de inimigos nao sao transmitidos. Somente o motor
+ * do servidor conhece a vida exata de monstros.
+ */
 public record BattleStatePayload(
         String sessionId,
         int turnId,
-        int playerHp, int playerMaxHp, int enemyHp, int enemyMaxHp,
+        int playerHp, int playerMaxHp,
         int playerSpeed, int enemySpeed, int playerGauge, int enemyGauge,
         boolean guarding, boolean playerTurn,
         String outcome, String combatLog, String turnPreview,
@@ -28,8 +32,6 @@ public record BattleStatePayload(
         buf.writeVarInt(s.turnId);
         buf.writeVarInt(s.playerHp);
         buf.writeVarInt(s.playerMaxHp);
-        buf.writeVarInt(s.enemyHp);
-        buf.writeVarInt(s.enemyMaxHp);
         buf.writeVarInt(s.playerSpeed);
         buf.writeVarInt(s.enemySpeed);
         buf.writeVarInt(s.playerGauge);
@@ -52,7 +54,7 @@ public record BattleStatePayload(
     private static BattleStatePayload read(RegistryFriendlyByteBuf buf) {
         return new BattleStatePayload(
                 buf.readUtf(64), buf.readVarInt(),
-                buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
+                buf.readVarInt(), buf.readVarInt(),
                 buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
                 buf.readBoolean(), buf.readBoolean(),
                 buf.readUtf(16), buf.readUtf(512), buf.readUtf(128),
