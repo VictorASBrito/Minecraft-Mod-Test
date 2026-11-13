@@ -9,10 +9,10 @@
 - O zumbi de teste tem IA, som e dano físico desabilitados; o motor mantém HP do combate separados do HP vanilla.
 - O personagem permanece na posição de início, recebe proteção temporária contra danos externos, tem a movimentação contida pelo servidor e fica voltado ao inimigo.
 - O mundo, outros jogadores e outras entidades continuam normalmente.
-- `ClientBattleCamera`: cria câmera virtual (ArmorStand exclusivamente no cliente) e usa `Minecraft#setCameraEntity` para posicioná-la no mapa:
+- `ClientBattleCamera`: mantém o jogador como entidade da câmera, força temporariamente `THIRD_PERSON_BACK` e gera a posição/rotação; o `BattleCameraMixin` aplica no final de `Camera.setup`:
   - `ELEVATED`: vista oblíqua lateral com ambos os participantes;
   - `BEHIND`: vista do personagem por trás.
-- `BattleHudOverlay`: registrador `RegisterGuiLayersEvent`, sem tela separada nem blur.
+- `BattleHudOverlay`: registrador `RegisterGuiLayersEvent`, sem tela separada nem blur, e suprime a mira vanilla enquanto a sessão estiver ativa.
 - `ClientBattleControls`: teclas `J` atacar, `K` defender, `L` sair e `V` alternar câmera.
 - O modo de visão é persistido em arquivo local; primeira batalha abre na visão elevada.
 - Ao concluir a batalha: estado original de câmera restaurado, proteção desativada e zumbi de teste descartado.
@@ -35,7 +35,7 @@
 ## Limitações importantes
 
 - **O dano é simulado**; o zumbi real está visível e imobilizado para validar os modelos e câmeras. Ainda não há combate físico e XP real.
-- A posição da câmera é fixa relativa ao centro do confronto; pode atravessar paredes em terrenos irregulares e precisa de futuro sistema de colisão/enquadramento.
+- A câmera tem um raycast básico para encurtar o enquadramento diante de blocos, mas ainda não resolve terrenos muito fechados, grupos grandes ou todas as colisões.
 - Sem entrada automática por aggro, seleção de mobs existentes, multiplayer cooperativo, grupos/reforços ou animações 3D.
 - Testar somente em mundo descartável: movimento, invulnerabilidade e spawn são alterações temporárias no mundo, sujeitas a imprevistos de crashes.
 
@@ -47,3 +47,16 @@
 - [ ] A HUD responde às teclas e o servidor continua autoridade de dano e iniciativa.
 - [ ] Ao encerrar, câmera, posição, proteção e mundo retornam a estado seguro.
 - [ ] Logout/reconexão e servidor dedicado sem crash.
+
+## Correção após capturas (câmeras 3D)
+
+As duas capturas mostraram `FIRST_PERSON` e braço na tela, embora o HUD alternasse de modo. O sistema agora usa `THIRD_PERSON_BACK` com `Camera.setup` alterado via Mixin **somente quando o combate está ativo**, o que deve permitir renderizar o próprio avatar. A referência arquitetural é o [Cobblemon Cinematics](https://github.com/P1neapplell0/Cobblemon-Cinematics).
+
+### Reteste visual obrigatório
+
+- [ ] Visão elevada mostra jogador e zumbi completos sobre o mapa.
+- [ ] Visão atrás mostra costas do jogador e o zumbi à frente, sem braço de primeira pessoa.
+- [ ] Alternar com V não move o personagem nem consome turno.
+- [ ] A mira vanilla desaparece na batalha e retorna ao sair.
+- [ ] Encerrar a batalha restaura o modo de câmera anterior (F5).
+- [ ] Testar árvores, paredes e obstáculos para validar o raycast provisório.

@@ -13,5 +13,6 @@ public final class MinecraftModTestClient {
         modEventBus.addListener(BattleHudOverlay::register);
         modEventBus.addListener(ClientBattleControls::registerKeys);
         NeoForge.EVENT_BUS.addListener(ClientBattleControls::onTick);
+        NeoForge.EVENT_BUS.addListener(BattleHudOverlay::hideVanillaCrosshair);
     }
 }

@@ -6,6 +6,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 /**
  * Interface leve sobre o proprio mundo. Sem Screen, sem fundo pintado sobre o mapa.
@@ -18,6 +20,14 @@ public final class BattleHudOverlay {
                 ResourceLocation.fromNamespaceAndPath(MinecraftModTest.MOD_ID, "battle_hud"),
                 (graphics, delta) -> render(graphics)
         );
+    }
+
+    /** Oculta a mira vanilla apenas durante a batalha ativa. */
+    public static void hideVanillaCrosshair(RenderGuiLayerEvent.Pre event) {
+        if (ClientBattleHandler.active()
+                && VanillaGuiLayers.CROSSHAIR.equals(event.getName())) {
+            event.setCanceled(true);
+        }
     }
 
     private static void render(GuiGraphics g) {

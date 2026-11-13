@@ -72,11 +72,11 @@ Sophisticated Backpacks, Waystones, Xaero's Minimap/World Map, JEI, Jade e mods 
 
 O comando `/battle test` agora **não abre uma tela de batalha separada**: utiliza a renderização 3D do próprio Minecraft. O servidor posiciona **um zumbi real, imobilizado e protegido** próximo do jogador e mantém ambos nos locais iniciais enquanto o combate está ativo. A batalha usa atributos/HP **simulados** pelo `BattleEngine`, e não causa dano nem oferece XP/drops vanilla.
 
-O cliente utiliza uma **entidade de câmera virtual, não adicionada ao mundo**, para apresentar o mapa em duas perspectivas de verdade:
+O cliente mantém **o jogador como entidade da câmera**, usa terceira pessoa e aplica posição e direção no final de `Camera.setup` via Mixin. A arquitetura aproveita a abordagem pública do Cobblemon Cinematics, sem exigir o Cobblemon como dependência. As duas perspectivas disponíveis são:
 - **Elevada/oblíqua:** enquadra jogador, zumbi e terreno em uma vista lateral a partir de uma posição alta;
 - **Por trás:** enquadra o jogador de costas, com o zumbi à frente.
 
-A câmera inicial é a última usada no cliente. A preferência fica em `config/minecraft_mod_test-battle-view.properties` e é restaurada após reiniciar o jogo. O antigo `BattleScreen` foi substituído por uma **HUD renderizada diretamente sobre o mundo**.
+A câmera não utiliza mais `FIRST_PERSON`: o avatar completo deve aparecer no mundo. O enquadramento também testa colisão com blocos. A câmera inicial é a última usada no cliente. A preferência fica em `config/minecraft_mod_test-battle-view.properties` e é restaurada após reiniciar o jogo. O antigo `BattleScreen` foi substituído por uma **HUD renderizada diretamente sobre o mundo**.
 
 ### Controles de teste (configuráveis em Opções > Controles)
 
@@ -104,3 +104,13 @@ A câmera inicial é a última usada no cliente. A preferência fica em `config/
 Ao iniciar uma batalha, somente o jogador envolvido recebe proteção temporária de dano e imobilização; essas propriedades são restauradas ao encerrar o teste. Outros jogadores e o mundo continuam funcionando. Para evitar efeitos inesperados em mundos importantes, não use essa implementação experimental fora de um ambiente de teste.
 
 Consulte também [o plano de testes do combate in-world](docs/MVP-BATTLE.md).
+
+### Correção da câmera após o primeiro teste visual
+
+As capturas mostraram o braço de primeira pessoa e os participantes fora do quadro. A câmera virtual `ArmorStand` foi substituída por transformações aplicadas diretamente a `Camera.setup`, mantendo o jogador como origem do render e forçando `THIRD_PERSON_BACK` somente durante a batalha.
+
+A mira vanilla é ocultada enquanto a sessão estiver ativa. A perspectiva original do jogador é restaurada ao encerrar.
+
+Referência técnica: [Cobblemon Cinematics](https://github.com/P1neapplell0/Cobblemon-Cinematics). Não há dependência de Cobblemon.
+
+**Necessário reteste no Minecraft:** o build verifica Java e testes automatizados, mas não garante o enquadramento visual real.
