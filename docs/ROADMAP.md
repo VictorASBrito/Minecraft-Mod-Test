@@ -4,7 +4,7 @@
 - [x] Fixar Minecraft 1.21.1, NeoForge e Java 21.
 - [x] Estruturar projeto Gradle e metadados do mod.
 - [x] Criar comando mínimo `/rpgstatus`.
-- [ ] Confirmar build no GitHub Actions e/ou localmente.
+- [x] Confirmar build de fundação no GitHub Actions e teste local relatado pelo autor.
 - [ ] Confirmar execução no cliente e num servidor dedicado.
 
 ## Fase 1 — Projeto do RPG
@@ -14,10 +14,14 @@
 - [ ] Selecionar o primeiro sistema mínimo jogável.
 
 ## Fase 2 — Vertical slice
-- [ ] Implementar um único ciclo de progressão completo.
-- [ ] Persistir dados no mundo e testar multiplayer.
-- [ ] Criar feedback ao jogador (comando/UI simples).
-- [ ] Escrever testes e critérios de aceitação.
+- [x] Implementar XP por derrota de monstros hostis e níveis provisórios.
+- [ ] Validar XP e persistência no cliente, após o novo build.
+- [x] Implementar persistência via AttachmentType e cópia ao morrer.
+- [ ] Testar persistência e multiplayer no jogo.
+- [x] Criar feedback por comandos e mensagens do servidor.
+- [ ] Criar HUD (quando definirmos o design).
+- [x] Escrever testes de unidade da curva de XP.
+- [ ] Verificar critérios de aceitação manualmente no cliente.
 
 ## Fase 3 — Compatibilidade
 - [ ] Criar instância com Sophisticated Backpacks e dependências.
