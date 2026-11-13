@@ -11,6 +11,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.EntityInvulnerabilityCheckEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -46,9 +47,8 @@ public final class BattleSessionManager {
 
         Vec3 anchor = player.position();
         Session session = new Session(UUID.randomUUID().toString(), new BattleEngine(),
-                zombie, anchor, zombie.position(), player.isInvulnerable());
+                zombie, anchor, zombie.position());
         SESSIONS.put(player.getUUID(), session);
-        player.setInvulnerable(true); // Protecao temporaria para o teste no mundo.
         player.setDeltaMovement(Vec3.ZERO);
         faceEachOther(player, zombie);
         send(player, session);
@@ -139,9 +139,19 @@ public final class BattleSessionManager {
         ));
     }
 
+    /**
+     * Protecao condicionada a uma batalha ATIVA, sem alterar/salvar flags do jogador.
+     * Mesmo num crash, o proximo login nao preserva invulnerabilidade artificial.
+     */
+    public static void onInvulnerabilityCheck(EntityInvulnerabilityCheckEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player
+                && SESSIONS.containsKey(player.getUUID())) {
+            event.setInvulnerable(true);
+        }
+    }
+
     private static void end(ServerPlayer player, Session session) {
         if (SESSIONS.remove(player.getUUID(), session)) {
-            player.setInvulnerable(session.originalInvulnerable);
             BattleWorldFixture.clear(session.zombie);
         }
     }
@@ -154,11 +164,7 @@ public final class BattleSessionManager {
     }
 
     public static void onServerStopped(ServerStoppedEvent event) {
-        for (Map.Entry<UUID, Session> entry : SESSIONS.entrySet()) {
-            Session session = entry.getValue();
-            // O servidor sera fechado; nao deixar o jogador invulneravel no save.
-            ServerPlayer player = event.getServer().getPlayerList().getPlayer(entry.getKey());
-            if (player != null) player.setInvulnerable(session.originalInvulnerable);
+        for (Session session : SESSIONS.values()) {
             BattleWorldFixture.clear(session.zombie);
         }
         SESSIONS.clear();
@@ -170,16 +176,14 @@ public final class BattleSessionManager {
         final Zombie zombie;
         final Vec3 playerAnchor;
         final Vec3 enemyAnchor;
-        final boolean originalInvulnerable;
 
         Session(String id, BattleEngine engine, Zombie zombie, Vec3 playerAnchor,
-                Vec3 enemyAnchor, boolean originalInvulnerable) {
+                Vec3 enemyAnchor) {
             this.id = id;
             this.engine = engine;
             this.zombie = zombie;
             this.playerAnchor = playerAnchor;
             this.enemyAnchor = enemyAnchor;
-            this.originalInvulnerable = originalInvulnerable;
         }
     }
 }
