@@ -2,7 +2,7 @@
 
 **Status:** Direção visual e gatilho de encontro aprovados; detalhes técnicos ainda em estudo  
 **Projeto:** Minecraft Mod Test — Minecraft 1.21.1 / NeoForge / Java 21  
-**Relacionada:** [RFC-001 — Motor de combate](./RFC-001-COMBAT-TURNOS.md)  
+**Relacionada:** [RFC-001 — Motor de combate](./RFC-001-COMBAT-TURNOS.md) · [RFC-003 — Formação de grupos e reforços](./RFC-003-GRUPOS-E-REFORCOS.md)  
 **Referências fornecidas pelo autor:** duas imagens enviadas na conversa de 13/11/2026 (ainda não adicionadas ao repositório).
 
 > Este documento registra requisitos de experiência e critérios futuros. **Não há código de combate ou de câmera implementado nesta RFC.**
@@ -17,6 +17,7 @@
 4. **Encontros começam pela detecção de inimigos hostis**: o monstro precisa identificar o jogador como alvo e atender às condições adicionais de aproximação/segurança. O jogo não deve iniciar uma batalha porque qualquer monstro distante simplesmente existe no mundo.
 5. O sistema de batalha continua com **iniciativa dinâmica baseada em velocidade e custo de ações** conforme a RFC-001.
 6. O personagem não tem classe obrigatória, possui limites de afinidade e **poderá redefinir suas especializações mediante custo ou desafio**; é proibido trocar durante batalha.
+7. **Grupo inicial** por proximidade + comportamento de aggro + orçamento de ameaça; **reforços dinâmicos limitados em todas as batalhas**, com anúncio de chegada e limite de ondas, conforme [RFC-003](./RFC-003-GRUPOS-E-REFORCOS.md).
 
 ## 2. Modo A — Visão lateral elevada / oblíqua
 
@@ -74,7 +75,7 @@ O jogador **não precisa atacar ou receber dano primeiro** para começar o encon
 
 - Não criar múltiplas sessões simultâneas para o mesmo jogador ou o mesmo mob.
 - Reservar um único encontro quando vários monstros detectarem o mesmo jogador ao mesmo tempo.
-- Definir como agrupar outros monstros próximos antes de abrir a cena de batalha.
+- **Definido o princípio:** formar grupos por proximidade, comportamento/hostilidade e ameaça. Os limites numéricos e regras de acessibilidade estão propostos na [RFC-003](./RFC-003-GRUPOS-E-REFORCOS.md).
 - Evitar cadeia imediata de batalhas na volta ao mundo após vitória, fuga, derrota ou desconexão: considerar período de graça configurável.
 - Não capturar mobs neutros por simples proximidade; sua hostilidade depende de regras explícitas.
 - Manter o restante do mundo Minecraft e outros jogadores funcionando.
@@ -147,7 +148,7 @@ Os nomes acima são **propostas arquiteturais**, não classes existentes.
 
 - **Visão inicial decidida:** última câmera usada, persistida localmente; no primeiro uso, lateral elevada/oblíqua. Ainda falta definir tecla de alternância e opções de acessibilidade.
 - Raio/tempo de detecção e regras exatas para mobs neutros, chefes e entidades de mods.
-- Seleção e quantidade de inimigos por encontro.
+- **Definido o método:** seleção por proximidade, hostilidade e orçamento de ameaça; reforços dinâmicos com limites em todas as batalhas. **Pendente:** confirmar valores numéricos, facções, regras específicas de terreno e frequência (RFC-003).
 - Como aliados próximos entram no combate (convite, proximidade ou grupo).
 - Política de contenção física dos mobs no mundo.
 - Regras de fuga, derrota, reconexão e timeout.
