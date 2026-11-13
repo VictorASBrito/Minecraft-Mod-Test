@@ -114,3 +114,11 @@ A mira vanilla é ocultada enquanto a sessão estiver ativa. A perspectiva origi
 Referência técnica: [Cobblemon Cinematics](https://github.com/P1neapplell0/Cobblemon-Cinematics). Não há dependência de Cobblemon.
 
 **Necessário reteste no Minecraft:** o build verifica Java e testes automatizados, mas não garante o enquadramento visual real.
+
+### Bloqueio de controles e foco no alvo (correção experimental)
+
+Durante uma sessão ativa, a câmera pode continuar em seu modo escolhido, mas **WASD, pulo, agachar, sprint, ataques vanilla, uso de itens, troca de hotbar, mineração e abertura de contêineres são bloqueados**. O cliente zera os impulsos antes do movimento, e o servidor cancela ataques e interações para evitar que pacotes tardios quebrem o mundo.
+
+Ao pressionar **J**, se o servidor aceitar o ataque no turno correto, o personagem se orienta para o zumbi e executa uma animação de ataque, sem forçar a troca da câmera. O foco é temporário. Quando o combate termina, os controles normais devem voltar.
+
+**Validação pendente:** teste em jogo real (incluindo criativo, sobrevivência, multiplayer e abertura de baús). Use um mundo descartável até confirmarmos que os bloqueios não interferem em outros mods.
