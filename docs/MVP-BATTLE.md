@@ -60,3 +60,20 @@ As duas capturas mostraram `FIRST_PERSON` e braço na tela, embora o HUD alterna
 - [ ] A mira vanilla desaparece na batalha e retorna ao sair.
 - [ ] Encerrar a batalha restaura o modo de câmera anterior (F5).
 - [ ] Testar árvores, paredes e obstáculos para validar o raycast provisório.
+
+## Reteste de regressão — bloqueio de ações durante combate
+
+Implementação: cliente com `MovementInputUpdateEvent` e `InputEvent` para impedir comandos vanilla; servidor com `BattleInteractionGuard` para rejeitar ataques e interações mesmo que um pacote chegue atrasado; orientação por ação de ataque confirmada via snapshot e `BattleTargeting`.
+
+- [ ] Após `/battle test`, segurar WASD, pular, agachar e correr: o personagem **não anda nem volta tremendo ao ponto inicial**.
+- [ ] Pressionar e segurar o mouse esquerdo contra zumbi e blocos: **sem dano vanilla e sem quebra de blocos**.
+- [ ] Mouse direito em baú, bloco e entidade: **nenhum inventário de contêiner ou interação vanilla é aberto**.
+- [ ] Rolar o mouse, usar números da hotbar, Q, F e tecla de inventário: sem mudanças indevidas na batalha.
+- [ ] Pressionar J: ataque executado uma única vez no turno correto e o **personagem vira em direção ao zumbi**.
+- [ ] Mover o mouse durante a escolha de ação: não muda o custo de iniciativa nem desloca o avatar; câmera selecionada continua válida.
+- [ ] Pressionar V: alternância e memória da câmera continuam funcionando.
+- [ ] Pressionar L ou vencer: movimento, mineração, baús e inventário voltam ao normal.
+- [ ] Testar em criativo e sobrevivência, inclusive tentando abrir um baú durante o combate.
+- [ ] Testar logout, reinício e dois jogadores em servidor dedicado para verificar que somente o participante fica bloqueado.
+
+**Escopo:** ainda não há ataque físico do mob nem combate multiplayer; o bloqueio só é aplicado a sessões experimentais ativas.
