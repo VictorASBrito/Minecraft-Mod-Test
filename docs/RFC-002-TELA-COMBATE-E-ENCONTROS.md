@@ -13,7 +13,7 @@
 2. A tela de batalha oferecerá **duas perspectivas alternáveis**, ambas com modelos/ambientes tridimensionais no estilo Minecraft:
    - **Visão lateral elevada/oblíqua**, com câmera mostrando o grupo e oponentes em lados opostos da arena e elementos de cenário ao fundo.
    - **Visão atrás do personagem ativo**, enquadrando costas/ombro do personagem e os inimigos à frente; comandos de combate dispostos ao redor do personagem.
-3. A escolha da câmera é **apenas visual**. Ela não altera turnos, iniciativa, dano, posição lógica, alcance ou seleção válida de alvos.
+3. A escolha da câmera é **apenas visual**. Ela não altera turnos, iniciativa, dano, posição lógica, alcance ou seleção válida de alvos. **A câmera inicial de cada batalha será a última escolhida pelo jogador**, persistida localmente entre batalhas e reinicializações do jogo; se não houver preferência salva, iniciar na **visão lateral elevada/oblíqua**.
 4. **Encontros começam pela detecção de inimigos hostis**: o monstro precisa identificar o jogador como alvo e atender às condições adicionais de aproximação/segurança. O jogo não deve iniciar uma batalha porque qualquer monstro distante simplesmente existe no mundo.
 5. O sistema de batalha continua com **iniciativa dinâmica baseada em velocidade e custo de ações** conforme a RFC-001.
 6. O personagem não tem classe obrigatória, possui limites de afinidade e **poderá redefinir suas especializações mediante custo ou desafio**; é proibido trocar durante batalha.
@@ -47,12 +47,13 @@
 
 **Proposta de implementação (ajustável):**
 - Controle de câmera discreto na HUD, com atalho configurável (por exemplo, `V`); evitar conflitar com atalhos do Minecraft ou de mods.
-- Preferência **local ao cliente**, lembrada entre batalhas. A câmera de um jogador não força os demais a mudar a sua.
+- **Decisão aprovada:** preferência **local ao cliente e persistente**, lembrada entre batalhas e também após fechar/reabrir o Minecraft. Ao começar uma batalha, recuperar a **última câmera utilizada**. Se não houver preferência válida salva (primeiro uso, configuração ausente ou inválida), adotar a **visão lateral elevada/oblíqua** como padrão inicial.
+- Salvar a nova preferência quando o usuário alternar a câmera; a câmera de um jogador não força os demais a mudar a sua e o modo escolhido não precisa ser sincronizado com o servidor.
 - Transição suave curta quando possível, com opção para desativar animação de câmera por acessibilidade.
 - Alternar modos não encerra a batalha, não troca alvo, não consome turno, não modifica a iniciativa nem envia ação de combate ao servidor.
 - Se a câmera escolhida não conseguir enquadrar adequadamente todos os participantes, aplicar correção automática de distância/enquadramento sem alterar a lógica de batalha.
 
-**Pendência:** confirmar qual dos dois modos será o padrão inicial, a tecla padrão e as preferências de acessibilidade.
+**Decisão encerrada — câmera inicial:** última perspectiva usada, com fallback para lateral elevada/oblíqua no primeiro uso. **Pendências restantes:** definir a tecla padrão, local/formato da configuração do cliente e preferências de acessibilidade.
 
 ## 5. Encontros por detecção de inimigos
 
@@ -123,6 +124,9 @@ Os nomes acima são **propostas arquiteturais**, não classes existentes.
 
 - [ ] Os **dois modos** mostram aliados, inimigos e alvo sem perda de informações essenciais.
 - [ ] É possível alternar a visão durante batalha sem consumir turno ou alterar estado do servidor.
+- [ ] A batalha seguinte abre na **última visão escolhida** pelo jogador, mesmo após reiniciar o Minecraft.
+- [ ] Na primeira batalha, ou com preferência ausente/inválida, a visão padrão é **lateral elevada/oblíqua**.
+- [ ] A preferência é individual por cliente; trocar a câmera de um jogador não modifica a dos demais.
 - [ ] Visão elevada mantém o combate legível com vários participantes.
 - [ ] Visão atrás do personagem apresenta opções ao seu redor, selecionáveis sem movimentar o avatar.
 - [ ] Inimigo ativo/turno ativo/HP e próximos turnos são discerníveis em ambas as visões.
@@ -141,7 +145,7 @@ Os nomes acima são **propostas arquiteturais**, não classes existentes.
 
 ## 10. Ainda precisamos decidir
 
-- **Qual visão será padrão** quando uma batalha começar.
+- **Visão inicial decidida:** última câmera usada, persistida localmente; no primeiro uso, lateral elevada/oblíqua. Ainda falta definir tecla de alternância e opções de acessibilidade.
 - Raio/tempo de detecção e regras exatas para mobs neutros, chefes e entidades de mods.
 - Seleção e quantidade de inimigos por encontro.
 - Como aliados próximos entram no combate (convite, proximidade ou grupo).
