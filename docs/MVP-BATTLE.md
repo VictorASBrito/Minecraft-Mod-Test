@@ -93,3 +93,18 @@ Implementação: cliente com `MovementInputUpdateEvent` e `InputEvent` para impe
 ### Limites do MVP
 
 A timeline atualmente usa nomes da previsão 1×1 (`Voce`/`Zumbi`) para escolher textura. Na fase de múltiplos participantes, o servidor enviará **IDs tipados, UUID e tipo de entidade** para permitir retratos corretos de outros jogadores e monstros sem inferir por texto. A futura tela de resultados não deve inventar XP ou itens enquanto o sistema de recompensas não estiver implementado.
+
+## MVP 3 — Resultados e recompensas
+
+- [ ] `/battle test` termina com tela de resultado, sem XP nem drop.
+- [ ] `/battle test-rewards` exige permissão de operador; 1 vitória concede +20 XP RPG e 1 Carne Podre real.
+- [ ] Sair pelo botão Continuar restaura o mundo e os controles.
+- [ ] A barra XP anima de antes para depois, mostrando subidas de nível.
+- [ ] `/rpg profile` confirma XP antes/depois e o XP permanece após reiniciar e morrer.
+- [ ] Fuga, derrota, cancelamento e pacotes duplicados não concedem recompensas indevidas.
+- [ ] Itens excedentes caem aos pés do jogador se o inventário estiver cheio.
+- [ ] Nenhuma experiência de encantamento vanilla é concedida na batalha de teste.
+- [ ] A vida exata do monstro não é enviada no snapshot.
+- [ ] Testar cliente com servidor dedicado e dois jogadores independentes.
+
+**Política temporária:** batalha de teste normal continua sem recompensas. Somente a modalidade OP `test-rewards` concede XP/loot. Nenhum monstro hostil do mundo real entra automaticamente em encontros nesta fase.

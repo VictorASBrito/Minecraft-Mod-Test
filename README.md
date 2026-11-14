@@ -149,3 +149,32 @@ git pull --ff-only origin feature/combat-hud-redesign
 ```
 
 Use `/battle test` e confira os dois modos com [V]; [J] ataca, [K] defende e [L] termina o teste.
+
+## Resultados de batalha e recompensas (MVP 3)
+
+Após vitória, derrota ou fuga, o mod **restaura a câmera e os controles normais** e abre uma tela própria de resultados com experiência RPG, nível e itens recebidos. A barra de XP avança gradualmente e informa quando um novo nível foi alcançado.
+
+### Como testar
+
+**Teste normal (sem recompensas):** `/battle test` — continua funcionando como antes e apresenta a tela de resultado com **0 XP e nenhum item**.
+
+**Teste com recompensas REAIS (exclusivo para operadores nível 2+):** `/battle test-rewards` — apenas em caso de vitória, entrega **20 XP de RPG** e **1 Carne Podre** ao inventário (ou deixa o item no chão caso esteja cheio). O comando é restrito para impedir que jogadores comuns gerem itens e níveis infinitamente.
+
+1. Use um mundo de testes, em local plano, com cheats habilitados (ou permissão OP em servidor).
+2. Execute `/rpg profile`: o nível deve começar em 1 com 0/100 XP, caso ainda não tenha XP salvo.
+3. Execute `/battle test-rewards`, vença com **J** e veja a tela de resultados.
+4. Confirme **+20 XP**, novo total, nível e ícone do item obtido; clique em **Continuar**.
+5. Execute `/rpg profile` novamente e confira o XP persistido.
+6. Repita cinco vitórias para testar a subida do nível 1 para 2. Feche e reabra o mundo e confira novamente.
+7. Teste **fuga (L)** e **derrota**: não devem conceder recompensas.
+8. Teste `/battle test` normal: resultado sem XP/itens e nenhuma alteração no inventário.
+
+### Regras de segurança
+
+- Recompensas são calculadas **somente no servidor** quando a sessão termina; não existe pacote cliente solicitando XP ou itens.
+- O registro da sessão é removido antes de conceder recompensas, impedindo processamento duplicado por comando/pacote antigo.
+- O XP RPG é independente da experiência de encantamento vanilla, salvo como `AttachmentType` persistente, com cópia após morte.
+- A tela mostra exclusivamente o comprovante enviado pelo servidor; não inventa itens ou XP.
+- A vida exata do zumbi continua oculta do cliente.
+
+**Nota de integração:** este PR incorpora as classes de progressão do PR #2, mas NÃO incorpora a recompensa por evento vanilla de morte de mob. Quando os encontros reais forem implementados, conceder XP somente no fechamento da sessão para evitar duplicação.

@@ -14,7 +14,7 @@ public final class BattleNetwork {
     private BattleNetwork() {}
 
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("1");
+        var registrar = event.registrar("2"); // BattleState payload and reward protocol version 2
         registrar.playToServer(BattleActionPayload.TYPE, BattleActionPayload.STREAM_CODEC,
                 (payload, context) -> {
                     if (context.player() instanceof ServerPlayer player) {
@@ -26,6 +26,13 @@ public final class BattleNetwork {
                 (payload, context) -> {
                     if (FMLEnvironment.dist == Dist.CLIENT) {
                         ClientBattleHandler.receive(payload);
+                    }
+                });
+
+        registrar.playToClient(BattleResultPayload.TYPE, BattleResultPayload.STREAM_CODEC,
+                (payload, context) -> {
+                    if (FMLEnvironment.dist == Dist.CLIENT) {
+                        ClientBattleHandler.receiveResult(payload);
                     }
                 });
     }
