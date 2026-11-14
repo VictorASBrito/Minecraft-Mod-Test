@@ -2,6 +2,8 @@ package dev.victorasbrito.minecraftmodtest;
 
 import com.mojang.logging.LogUtils;
 import dev.victorasbrito.minecraftmodtest.command.RpgStatusCommand;
+import dev.victorasbrito.minecraftmodtest.command.RpgProgressionCommand;
+import dev.victorasbrito.minecraftmodtest.progression.ProgressionAttachments;
 import dev.victorasbrito.minecraftmodtest.battle.command.BattleCommands;
 import dev.victorasbrito.minecraftmodtest.battle.network.BattleNetwork;
 import dev.victorasbrito.minecraftmodtest.battle.server.BattleSessionManager;
@@ -21,7 +23,9 @@ public final class MinecraftModTest {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public MinecraftModTest(IEventBus modEventBus) {
+        ProgressionAttachments.register(modEventBus);
         NeoForge.EVENT_BUS.addListener(RpgStatusCommand::register);
+        NeoForge.EVENT_BUS.addListener(RpgProgressionCommand::register);
         NeoForge.EVENT_BUS.addListener(BattleCommands::register);
         NeoForge.EVENT_BUS.addListener(BattleSessionManager::onLogout);
         NeoForge.EVENT_BUS.addListener(BattleSessionManager::onPlayerTick);

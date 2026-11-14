@@ -3,6 +3,7 @@ package dev.victorasbrito.minecraftmodtest.battle.server;
 import dev.victorasbrito.minecraftmodtest.battle.engine.BattleEngine;
 import dev.victorasbrito.minecraftmodtest.battle.network.BattleActionPayload;
 import dev.victorasbrito.minecraftmodtest.battle.network.BattleStatePayload;
+import dev.victorasbrito.minecraftmodtest.battle.network.BattleResultPayload;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -28,6 +29,11 @@ public final class BattleSessionManager {
     private BattleSessionManager() {}
 
     public static void startOrResume(ServerPlayer player) {
+        startOrResume(player, false);
+    }
+
+    /** Only an authorized operator can explicitly enable debug rewards. */
+    public static void startOrResume(ServerPlayer player, boolean authorizedDebugRewards) {
         Session existing = SESSIONS.get(player.getUUID());
         if (existing != null) {
             send(player, existing);
@@ -49,7 +55,7 @@ public final class BattleSessionManager {
 
         Vec3 anchor = player.position();
         Session session = new Session(UUID.randomUUID().toString(), new BattleEngine(),
-                zombie, anchor, zombie.position());
+                zombie, anchor, zombie.position(), authorizedDebugRewards);
         SESSIONS.put(player.getUUID(), session);
         player.setDeltaMovement(Vec3.ZERO);
         faceEachOther(player, zombie);
@@ -73,7 +79,7 @@ public final class BattleSessionManager {
         if (session == null) return false;
         session.engine.play(BattleEngine.Action.FLEE, session.engine.turnId());
         send(player, session);
-        end(player, session);
+        finish(player, session);
         return true;
     }
 
@@ -107,7 +113,7 @@ public final class BattleSessionManager {
 
         send(player, session);
         if (session.engine.outcome() != BattleEngine.Outcome.ACTIVE) {
-            end(player, session);
+            finish(player, session);
         }
     }
 
@@ -166,6 +172,19 @@ public final class BattleSessionManager {
         }
     }
 
+    /**
+     * Single terminal settlement point. Atomically remove the session BEFORE
+     * issuing any reward; repeated commands/packets cannot claim it twice.
+     */
+    private static void finish(ServerPlayer player, Session session) {
+        if (SESSIONS.remove(player.getUUID(), session)) {
+            BattleWorldFixture.clear(session.zombie);
+            BattleResultPayload receipt = BattleRewardService.settle(
+                    player, session.id, session.engine.outcome(), session.debugRewards);
+            PacketDistributor.sendToPlayer(player, receipt);
+        }
+    }
+
     private static void end(ServerPlayer player, Session session) {
         if (SESSIONS.remove(player.getUUID(), session)) {
             BattleWorldFixture.clear(session.zombie);
@@ -194,14 +213,16 @@ public final class BattleSessionManager {
         final Vec3 enemyAnchor;
         int actionSequence;
         String resolvedAction = "";
+        final boolean debugRewards;
 
         Session(String id, BattleEngine engine, Zombie zombie, Vec3 playerAnchor,
-                Vec3 enemyAnchor) {
+                Vec3 enemyAnchor, boolean debugRewards) {
             this.id = id;
             this.engine = engine;
             this.zombie = zombie;
             this.playerAnchor = playerAnchor;
             this.enemyAnchor = enemyAnchor;
+            this.debugRewards = debugRewards;
         }
     }
 }

@@ -1,6 +1,7 @@
 package dev.victorasbrito.minecraftmodtest.battle.client;
 
 import dev.victorasbrito.minecraftmodtest.battle.network.BattleStatePayload;
+import dev.victorasbrito.minecraftmodtest.battle.network.BattleResultPayload;
 import net.minecraft.client.Minecraft;
 import dev.victorasbrito.minecraftmodtest.battle.engine.BattleTargeting;
 
@@ -37,6 +38,22 @@ public final class ClientBattleHandler {
             state = snapshot;
             resultTicks = snapshot.finished() ? 100 : 0;
             ClientBattleCamera.update(snapshot);
+        });
+    }
+
+    /**
+     * Result arrives only AFTER the server ends the session. Restore the
+     * real camera and remove battle control locks BEFORE opening the screen.
+     */
+    public static void receiveResult(BattleResultPayload receipt) {
+        Minecraft minecraft = Minecraft.getInstance();
+        minecraft.execute(() -> {
+            if (minecraft.player == null || minecraft.level == null) {
+                clear();
+                return;
+            }
+            clear();
+            minecraft.setScreen(new BattleResultsScreen(receipt));
         });
     }
 
