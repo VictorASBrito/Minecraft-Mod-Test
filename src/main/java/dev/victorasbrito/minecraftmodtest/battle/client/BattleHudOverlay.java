@@ -14,8 +14,8 @@ import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 /**
- * HUD de combate desenhada sobre o mundo 3D: nenhum menu Screen, camera ou
- * entidade e alterado aqui. O inimigo NAO revela HP, nem em texto nem em barra.
+ * HUD de combate sobre o mundo 3D, reutilizada pela camada de captura do mouse.
+ * A Screen e transparente e nao substitui a arena do mundo. HP inimigo oculto.
  *
  * Este MVP possui apenas dois participantes no motor. Os retratos sao gerados
  * a partir da previsao de turnos e ficam preparados para receber IDs tipados
@@ -46,7 +46,9 @@ public final class BattleHudOverlay {
     public static void register(RegisterGuiLayersEvent event) {
         event.registerAboveAll(
                 ResourceLocation.fromNamespaceAndPath(MinecraftModTest.MOD_ID, "battle_hud"),
-                (graphics, delta) -> render(graphics)
+                (graphics, delta) -> {
+                    if (Minecraft.getInstance().screen == null) render(graphics);
+                }
         );
     }
 
@@ -67,10 +69,15 @@ public final class BattleHudOverlay {
         }
     }
 
+    /** Usa exatamente a mesma HUD na Screen de cursor livre. */
+    public static void renderForScreen(GuiGraphics graphics) {
+        render(graphics);
+    }
+
     private static void render(GuiGraphics g) {
         Minecraft mc = Minecraft.getInstance();
         BattleStatePayload state = ClientBattleHandler.state();
-        if (state == null || mc.player == null || mc.screen != null) return;
+        if (state == null || mc.player == null) return;
 
         int w = g.guiWidth();
         int h = g.guiHeight();

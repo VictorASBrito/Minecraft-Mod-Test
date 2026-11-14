@@ -6,8 +6,9 @@ import net.minecraft.client.Minecraft;
 import dev.victorasbrito.minecraftmodtest.battle.engine.BattleTargeting;
 
 /**
- * Mantem o ultimo snapshot para HUD e camera. Nunca abre uma Screen.
- * A batalha se desenrola visualmente no proprio mapa carregado.
+ * Mantem os snapshots de combate e a camera do mapa real.
+ * Abre somente uma Screen TRANSPARENTE de captura de mouse/teclado.
+ * O mundo 3D continua visivel e e a arena do combate.
  */
 public final class ClientBattleHandler {
     private static BattleStatePayload state;
@@ -38,6 +39,11 @@ public final class ClientBattleHandler {
             state = snapshot;
             resultTicks = snapshot.finished() ? 100 : 0;
             ClientBattleCamera.update(snapshot);
+            if (!snapshot.finished() &&
+                    !(minecraft.screen instanceof BattleControlScreen)) {
+                // Screen libera o cursor e captura cliques, sem escurecer o mundo.
+                minecraft.setScreen(new BattleControlScreen());
+            }
         });
     }
 
@@ -94,6 +100,10 @@ public final class ClientBattleHandler {
 
     public static void clear() {
         ClientBattleCamera.restore();
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.screen instanceof BattleControlScreen) {
+            minecraft.setScreen(null);
+        }
         state = null;
         resultTicks = 0;
         appliedSessionId = "";
