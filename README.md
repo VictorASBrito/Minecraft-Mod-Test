@@ -178,3 +178,26 @@ Após vitória, derrota ou fuga, o mod **restaura a câmera e os controles norma
 - A vida exata do zumbi continua oculta do cliente.
 
 **Nota de integração:** este PR incorpora as classes de progressão do PR #2, mas NÃO incorpora a recompensa por evento vanilla de morte de mob. Quando os encontros reais forem implementados, conceder XP somente no fechamento da sessão para evitar duplicação.
+
+## Comandos de combate com mouse ou teclado
+
+Durante um encontro, agora aparece um **cursor de mouse livre** sobre a mesma HUD compacta. Isso significa que a câmera permanece na perspectiva lateral ou por trás, mas não pode mais ser girada com o mouse enquanto o jogador escolhe suas ações.
+
+- **Clique esquerdo:** selecione os cartões Atacar, Defender e Fugir na parte inferior (realce dourado ao passar o mouse).
+- **Teclado:** J = Atacar, K = Defender, L = Fugir e V = alternar câmera; os atalhos continuam personalizáveis em Opções > Controles.
+- Os cartões Habilidade e Item continuam desabilitados, sem executar ações.
+- A camada de captura é uma `Screen` transparente, **não uma segunda arena nem uma tela escurecida**; o mundo, o avatar e os inimigos continuam renderizados.
+- O bloqueio no servidor para ataques e interações vanilla é mantido; cliques da interface não podem minerar blocos nem abrir baús.
+- Ao encerrar a batalha, a tela de resultados assume o lugar da interface e a câmera normal é restaurada. Ao fechar o resultado, o cursor volta ao comportamento vanilla.
+- Esc não fecha a sessão sem confirmação do servidor; use Fugir (L ou clique).
+
+### Como testar
+
+```powershell
+git fetch origin
+git switch feature/battle-mouse-actions
+git pull --ff-only origin feature/battle-mouse-actions
+.\\gradlew.bat runClient
+```
+
+Use `/battle test` e, se quiser testar recompensas e possuir permissão de operador, `/battle test-rewards`.

@@ -66,9 +66,11 @@ public final class ClientBattleControls {
         }
     }
 
-    /** Sem pressionamento do mouse, mas movimento livre para orientacao visual. */
+    /** A Screen transparente captura cliques; cancelar aqui impediria seus botoes. */
     public static void onMouseButton(InputEvent.MouseButton.Pre event) {
-        if (ClientBattleHandler.active() && event.getButton() >= 0 && event.getButton() <= 2) {
+        if (ClientBattleHandler.active()
+                && !(Minecraft.getInstance().screen instanceof BattleControlScreen)
+                && event.getButton() >= 0 && event.getButton() <= 2) {
             event.setCanceled(true);
         }
     }
@@ -127,7 +129,15 @@ public final class ClientBattleControls {
         }
 
         var state = ClientBattleHandler.state();
-        if (state == null || mc.screen != null || !state.playerTurn()) return;
+        if (state == null) return;
+
+        // Com cursor livre, o Minecraft envia teclas diretamente a Screen.
+        // Nao deixar KeyMapping e Screen dispararem a mesma acao duas vezes.
+        if (mc.screen instanceof BattleControlScreen) {
+            consumeUnusedKeys();
+            return;
+        }
+        if (mc.screen != null || !state.playerTurn()) return;
 
         if (!lastSession.equals(state.sessionId()) || lastTurn != state.turnId()) {
             actionSent = false;
@@ -147,11 +157,49 @@ public final class ClientBattleControls {
         while (SWITCH_CAMERA.consumeClick()) {}
     }
 
-    private static void send(String action) {
+    /**
+     * Atalhos configuraveis continuam validos mesmo com a tela transparente
+     * aberta, porque as teclas passam pelo Screen.keyPressed.
+     */
+    public static boolean handleScreenKey(int keyCode, int scanCode) {
+        if (!ClientBattleHandler.active()) return false;
+        if (SWITCH_CAMERA.matches(keyCode, scanCode)) {
+            BattleViewPreference.toggle();
+            var state = ClientBattleHandler.state();
+            if (state != null) ClientBattleCamera.reposition(state);
+            return true;
+        }
+        if (ATTACK.matches(keyCode, scanCode)) {
+            submitAction("ATTACK");
+            return true;
+        }
+        if (GUARD.matches(keyCode, scanCode)) {
+            submitAction("GUARD");
+            return true;
+        }
+        if (FLEE.matches(keyCode, scanCode)) {
+            submitAction("FLEE");
+            return true;
+        }
+        return false;
+    }
+
+    public static void submitAction(String action) {
         var state = ClientBattleHandler.state();
-        if (actionSent || state == null || !state.playerTurn()) return;
+        if (state == null || state.finished() || !state.playerTurn()) return;
+
+        if (!lastSession.equals(state.sessionId()) || lastTurn != state.turnId()) {
+            actionSent = false;
+            lastSession = state.sessionId();
+            lastTurn = state.turnId();
+        }
+        if (actionSent) return;
         actionSent = true;
         PacketDistributor.sendToServer(new BattleActionPayload(
                 state.sessionId(), state.turnId(), action));
+    }
+
+    private static void send(String action) {
+        submitAction(action);
     }
 }

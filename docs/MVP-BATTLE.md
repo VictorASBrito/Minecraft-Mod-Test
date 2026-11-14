@@ -108,3 +108,17 @@ A timeline atualmente usa nomes da previsão 1×1 (`Voce`/`Zumbi`) para escolher
 - [ ] Testar cliente com servidor dedicado e dois jogadores independentes.
 
 **Política temporária:** batalha de teste normal continua sem recompensas. Somente a modalidade OP `test-rewards` concede XP/loot. Nenhum monstro hostil do mundo real entra automaticamente em encontros nesta fase.
+
+## MVP 4 — Seleção de ações com cursor livre
+
+- [ ] Ao iniciar `/battle test`, o mouse vira cursor e a HUD continua sobre o mundo 3D (sem blur).
+- [ ] Os cartões Atacar, Defender e Fugir destacam a borda ao passar o cursor.
+- [ ] Clicar Atacar ou pressionar J executa exatamente UMA ação por turno.
+- [ ] Clicar Defender ou pressionar K funciona; clicar Fugir ou pressionar L encerra.
+- [ ] V alterna câmera sem consumir turno; o mouse não gira a câmera durante a escolha.
+- [ ] Habilidade e Item continuam visualmente desativados.
+- [ ] Cliques no mapa, baús e monstros não quebram blocos, abrem contêineres nem causam dano vanilla.
+- [ ] Esc não libera o controle nem fecha a batalha diretamente.
+- [ ] Ao vencer/fugir, tela de resultados abre normalmente e o cursor funciona em Continuar.
+- [ ] Ao fechar o resultado, controles normais, câmera e mouse retornam.
+- [ ] Testar GUI scale compacta, multiplayer e ações repetidas/atrasadas.
