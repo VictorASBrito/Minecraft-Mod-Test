@@ -1,3 +1,7 @@
 {
-  "command.minecraft_mod_test.status": "Minecraft Mod Test active! RPG and fantasy foundation loaded successfully."
+  "command.minecraft_mod_test.status": "Minecraft Mod Test active! RPG and fantasy foundation loaded successfully.",
+  "command.minecraft_mod_test.profile": "RPG | Level %s | XP: %s/%s | Total XP: %s",
+  "command.minecraft_mod_test.profile_max": "RPG | Level %s (maximum) | Total XP: %s",
+  "command.minecraft_mod_test.xp_added": "RPG | +%s XP granted to %s (level %s).",
+  "message.minecraft_mod_test.level_up": "RPG | You reached level %s!"
 }

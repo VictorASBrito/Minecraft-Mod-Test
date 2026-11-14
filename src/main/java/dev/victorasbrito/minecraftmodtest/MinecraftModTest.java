@@ -2,6 +2,13 @@ package dev.victorasbrito.minecraftmodtest;
 
 import com.mojang.logging.LogUtils;
 import dev.victorasbrito.minecraftmodtest.command.RpgStatusCommand;
+import dev.victorasbrito.minecraftmodtest.command.RpgProgressionCommand;
+import dev.victorasbrito.minecraftmodtest.progression.ProgressionAttachments;
+import dev.victorasbrito.minecraftmodtest.battle.command.BattleCommands;
+import dev.victorasbrito.minecraftmodtest.battle.network.BattleNetwork;
+import dev.victorasbrito.minecraftmodtest.battle.server.BattleSessionManager;
+import dev.victorasbrito.minecraftmodtest.battle.server.BattleWorldFixture;
+import dev.victorasbrito.minecraftmodtest.battle.server.BattleInteractionGuard;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
@@ -16,7 +23,23 @@ public final class MinecraftModTest {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public MinecraftModTest(IEventBus modEventBus) {
+        ProgressionAttachments.register(modEventBus);
         NeoForge.EVENT_BUS.addListener(RpgStatusCommand::register);
+        NeoForge.EVENT_BUS.addListener(RpgProgressionCommand::register);
+        NeoForge.EVENT_BUS.addListener(BattleCommands::register);
+        NeoForge.EVENT_BUS.addListener(BattleSessionManager::onLogout);
+        NeoForge.EVENT_BUS.addListener(BattleSessionManager::onPlayerTick);
+        NeoForge.EVENT_BUS.addListener(BattleSessionManager::onInvulnerabilityCheck);
+        NeoForge.EVENT_BUS.addListener(BattleWorldFixture::onJoin);
+        NeoForge.EVENT_BUS.addListener(BattleInteractionGuard::onAttackEntity);
+        NeoForge.EVENT_BUS.addListener(BattleInteractionGuard::onLeftClickBlock);
+        NeoForge.EVENT_BUS.addListener(BattleInteractionGuard::onRightClickBlock);
+        NeoForge.EVENT_BUS.addListener(BattleInteractionGuard::onRightClickItem);
+        NeoForge.EVENT_BUS.addListener(BattleInteractionGuard::onInteractEntity);
+        NeoForge.EVENT_BUS.addListener(BattleInteractionGuard::onInteractEntitySpecific);
+        NeoForge.EVENT_BUS.addListener(BattleInteractionGuard::onBlockBreak);
+        NeoForge.EVENT_BUS.addListener(BattleSessionManager::onServerStopped);
+        modEventBus.addListener(BattleNetwork::register);
         LOGGER.info("Minecraft Mod Test carregado (Minecraft 1.21.1 / NeoForge).");
     }
 }
