@@ -227,3 +227,30 @@ git pull --ff-only origin feature/battle-multi-target
 Em local plano de um mundo de testes, execute `/battle test-group`, escolha o **Zumbi 2** pelo mouse e ataque até derrotá-lo, observando a mudança da ordem de iniciativa. Em seguida, derrote o **Zumbi 1** e confirme que a tela de resultados abre sem recompensas. Repita usando Tab e J.
 
 **Pendente:** clicar diretamente no modelo 3D do monstro, animações avançadas, encontros por aggro, reforços dinâmicos, multiplayer cooperativo e proteção especial contra obstrução da câmera em construções fechadas.
+
+## MVP 7 — Encontros por detecção e reforços dinâmicos (experimental)
+
+Este primeiro marco automático suporta **somente zumbis vanilla**. Enquanto você explora em Sobrevivência ou Aventura, o servidor reconhece um zumbi que está perseguindo você de verdade, dentro de 6 blocos e com linha de visão, após 20 ticks de aggro estável. Não basta um monstro distante existir no mapa.
+
+**Grupos iniciais:** até 3 zumbis que já perseguem o mesmo jogador e são visíveis num raio de 12 blocos. Não são criadas cópias: são as entidades do mundo que participam da sessão.
+
+**Reforços:** em qualquer batalha, até 2 zumbis reais adicionais podem entrar, em no máximo 2 ondas. É necessário haver um monstro elegível perseguindo o jogador a até 16 blocos. O servidor reserva o mob e a HUD avisa a chegada por duas ações do motor; o grupo não excede 3 monstros vivos simultâneos nem 5 históricos. Sem candidato, não surge reforço artificialmente.
+
+**Pós-batalha:** 300 ticks (15s) de proteção contra novos encontros RPG, sem invulnerabilidade fora da batalha. Em fuga/derrota, mobs sobreviventes recuperam seu estado vanilla. Após crash, as marcações de reserva permitem restaurar as flags ao recarregar chunks.
+
+**Recompensa natural provisória:** vitória paga 20 XP de RPG e 1 carne podre por zumbi derrotado, até 5 mobs; derrota/fuga não paga. Entidades derrotadas são descartadas sem loot vanilla para evitar recompensas duplicadas. Este modelo não preserva as loot tables/equipamentos especiais do Minecraft, que serão integrados posteriormente.
+
+**Controle administrativo (OP):** `/battle auto off` desativa novos encontros automáticos e varreduras de reforços. `/battle auto on` reativa. O ajuste é temporário e volta para ligado após reiniciar o servidor. Os comandos manuais `/battle test`, `/battle test-group` e `/battle test-rewards` permanecem disponíveis.
+
+### Roteiro de teste
+
+1. Entre num mundo descartável em Sobrevivência. Use `/time set night` com cheats para evitar zumbis queimando ao sol.
+2. Aproxime-se de um zumbi que realmente esteja perseguindo você; espere cerca de um segundo com ele a menos de seis blocos.
+3. Teste dois ou três zumbis perseguindo o jogador simultaneamente para validar o grupo inicial.
+4. Deixe outro zumbi hostil por perto (até 16 blocos, fora do grupo inicial). Se houver espaço, ele poderá ser anunciado como reforço.
+5. Clique em alvos distintos, teste Tab, J, K, L e V. Verifique que a vida dos zumbis continua oculta.
+6. Vença e valide a experiência e os itens no resultado. Depois fuja de outro confronto e confira que mobs sobreviventes voltam à IA vanilla.
+7. Confira se não se inicia imediatamente outra batalha RPG nos 15 segundos seguintes.
+8. Use `/battle auto off`, aproxime-se de um zumbi hostil e confirme que a batalha automática não começa; reative depois.
+
+**Limitações conhecidas:** somente zumbis vanilla; linha de visão não equivale a navegação/caminho real por cavernas; IA de monstros equipados, chunks, multiplayer e falhas abruptas devem ser testados antes de usar este código num mundo importante. Os parâmetros são conservadores, fixados em `EncounterRules`, e ainda não são o balanceamento definitivo.
