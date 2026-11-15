@@ -22,6 +22,8 @@ public final class BattleEngine {
     private final List<Fighter> enemies = new ArrayList<>();
     private Outcome outcome = Outcome.ACTIVE;
     private boolean playerWaiting;
+    private boolean pendingReinforcement;
+    private int resolvedActions;
     private int turnId;
     private String combatLog = "Inimigos se aproximam!";
 
@@ -37,8 +39,8 @@ public final class BattleEngine {
         if (playerSpeed < 1 || enemySpeed < 1 || playerSpeed > 400 || enemySpeed > 400) {
             throw new IllegalArgumentException("Velocidade fora do intervalo 1..400");
         }
-        if (enemyCount < 1 || enemyCount > 3) {
-            throw new IllegalArgumentException("O prototipo suporta 1 a 3 inimigos");
+        if (enemyCount < 1 || enemyCount > 5) {
+            throw new IllegalArgumentException("O prototipo suporta 1 a 5 inimigos");
         }
         player = new Fighter(120, playerSpeed);
         for (int i = 0; i < enemyCount; i++) {
@@ -67,6 +69,7 @@ public final class BattleEngine {
             return false;
         }
         playerWaiting = false;
+        resolvedActions++;
 
         if (action == Action.FLEE) {
             outcome = Outcome.FLED;
@@ -86,7 +89,7 @@ public final class BattleEngine {
             combatLog = "Voce assumiu uma postura defensiva.";
         }
 
-        if (aliveEnemyCount() == 0) {
+        if (aliveEnemyCount() == 0 && !pendingReinforcement) {
             outcome = Outcome.VICTORY;
             combatLog += " Vitoria!";
         } else {
@@ -103,6 +106,11 @@ public final class BattleEngine {
                 return;
             }
             if (aliveEnemyCount() == 0) {
+                if (pendingReinforcement) {
+                    playerWaiting = false;
+                    combatLog += " Aguardando reforco anunciado.";
+                    return;
+                }
                 outcome = Outcome.VICTORY;
                 combatLog += " Vitoria!";
                 return;
@@ -128,6 +136,7 @@ public final class BattleEngine {
             if (selected >= 0) {
                 Fighter enemy = enemies.get(selected);
                 enemy.gauge -= ATTACK_COST;
+                resolvedActions++;
                 int damage = player.guarding ? ENEMY_DAMAGE / 2 : ENEMY_DAMAGE;
                 player.guarding = false;
                 player.hp = Math.max(0, player.hp - damage);
@@ -202,6 +211,46 @@ public final class BattleEngine {
     private String enemyName(int index) {
         return enemies.size() == 1 ? "Zumbi" : "Zumbi " + (index + 1);
     }
+
+
+    /**
+     * Um reforco so altera a composicao ENTRE resolucoes de acoes.
+     * O novo combatente inicia com gauge zero, sem turno gratis.
+     */
+    public boolean addReinforcement(int speed) {
+        if (outcome != Outcome.ACTIVE || enemies.size() >= 5 || speed < 1 || speed > 400) {
+            return false;
+        }
+        enemies.add(new Fighter(60, speed));
+        pendingReinforcement = false;
+        combatLog += " Um reforco entrou no combate!";
+        if (!playerWaiting) advanceToPlayerTurn();
+        return true;
+    }
+
+    /** A chegada prometida impede vitoria prematura, mas nao cria inimigos. */
+    public void setPendingReinforcement(boolean pending) {
+        if (outcome != Outcome.ACTIVE) return;
+        pendingReinforcement = pending;
+        if (!pending && aliveEnemyCount() == 0) {
+            outcome = Outcome.VICTORY;
+            playerWaiting = false;
+            combatLog += " Vitoria!";
+        }
+    }
+
+    /** Cancela imediatamente sem recompensas, mesmo durante uma espera por reforco. */
+    public void cancel() {
+        if (outcome == Outcome.ACTIVE) {
+            outcome = Outcome.FLED;
+            pendingReinforcement = false;
+            playerWaiting = false;
+            combatLog = "Batalha encerrada.";
+        }
+    }
+
+    public boolean hasPendingReinforcement() { return pendingReinforcement; }
+    public int resolvedActions() { return resolvedActions; }
 
     public int enemyCount() { return enemies.size(); }
     public int aliveEnemyCount() {

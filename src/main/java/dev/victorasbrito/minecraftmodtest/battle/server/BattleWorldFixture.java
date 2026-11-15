@@ -70,10 +70,23 @@ public final class BattleWorldFixture {
     }
 
     public static void onJoin(EntityJoinLevelEvent event) {
-        if (!event.getLevel().isClientSide()
-                && event.getEntity() instanceof Zombie zombie
-                && zombie.getPersistentData().getBoolean(TEST_MARKER)) {
+        if (event.getLevel().isClientSide() || !(event.getEntity() instanceof Zombie zombie)) return;
+        if (zombie.getPersistentData().getBoolean(TEST_MARKER)) {
             zombie.discard();
+            return;
+        }
+        // Recuperacao apos travamento abrupto: a reserva de batalha nao existe
+        // mais no novo processo, portanto o monstro volta ao comportamento vanilla.
+        if (zombie.getPersistentData().getBoolean("minecraft_mod_test_reserved_real")) {
+            boolean oldAi = zombie.getPersistentData().getBoolean("minecraft_mod_test_old_no_ai");
+            boolean oldInvulnerable =
+                    zombie.getPersistentData().getBoolean("minecraft_mod_test_old_invuln");
+            zombie.getPersistentData().remove("minecraft_mod_test_reserved_real");
+            zombie.getPersistentData().remove("minecraft_mod_test_old_no_ai");
+            zombie.getPersistentData().remove("minecraft_mod_test_old_invuln");
+            zombie.setNoAi(oldAi);
+            zombie.setInvulnerable(oldInvulnerable);
+            zombie.setTarget(null);
         }
     }
 }

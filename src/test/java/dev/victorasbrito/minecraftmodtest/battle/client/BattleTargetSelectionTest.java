@@ -16,6 +16,12 @@ class BattleTargetSelectionTest {
         var actions=BattleHudLayout.forScreen(360,240).actions();
         assertTrue(t.bottom()<actions.y());
     }
+    @Test void compactThreeTargetLayoutKeepsLastCardRightOfPlayerStatus() {
+        var card=BattleHudLayout.targetCard(360,240,3,2);
+        var status=BattleHudLayout.forScreen(360,240).status();
+        assertTrue(card.x()>=status.right());
+        assertTrue(card.right()<=360);
+    }
     @Test void deadSpaceIsNotATarget() {
         assertEquals(-1,BattleHudLayout.targetIndexAt(854,480,2,10,200));
         assertEquals(-1,BattleHudLayout.targetIndexAt(120,80,2,10,20));

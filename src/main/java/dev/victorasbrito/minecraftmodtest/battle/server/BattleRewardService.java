@@ -20,9 +20,12 @@ public final class BattleRewardService {
 
     public static BattleResultPayload settle(ServerPlayer player, String sessionId,
                                               BattleEngine.Outcome outcome,
-                                              boolean authorizedDebugRewards) {
+                                              boolean authorizedDebugRewards,
+                                              int defeatedNaturalZombies) {
         var before = ProgressionService.getProgress(player);
-        var reward = BattleRewardPolicy.forOutcome(outcome, authorizedDebugRewards);
+        var reward = defeatedNaturalZombies > 0
+                ? BattleRewardPolicy.forNaturalVictory(outcome, defeatedNaturalZombies)
+                : BattleRewardPolicy.forOutcome(outcome, authorizedDebugRewards);
         int actualXp = 0;
         if (reward.experience() > 0) {
             actualXp = ProgressionService.addExperience(player, reward.experience()).grantedXp();

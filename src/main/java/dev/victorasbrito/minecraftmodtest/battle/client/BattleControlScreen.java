@@ -57,10 +57,12 @@ public final class BattleControlScreen extends Screen {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             BattleStatePayload snapshot = ClientBattleHandler.state();
             if (snapshot != null) {
-                int target = BattleHudLayout.targetIndexAt(width,height,
-                        snapshot.targets().size(),mouseX,mouseY);
-                if (target >= 0) {
-                    ClientBattleHandler.selectTarget(target);
+                var visible = snapshot.targets().stream()
+                        .filter(BattleStatePayload.TargetSnapshot::alive).toList();
+                int card = BattleHudLayout.targetIndexAt(width,height,
+                        visible.size(),mouseX,mouseY);
+                if (card >= 0) {
+                    ClientBattleHandler.selectTarget(visible.get(card).index());
                     return true;
                 }
             }

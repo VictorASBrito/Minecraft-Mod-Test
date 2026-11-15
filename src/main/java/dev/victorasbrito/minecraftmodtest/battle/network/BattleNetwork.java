@@ -14,7 +14,7 @@ public final class BattleNetwork {
     private BattleNetwork() {}
 
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("3"); // Targets and selected index in payloads; protocol v3
+        var registrar = event.registrar("4"); // Aggro encounters and reinforcement warnings
         registrar.playToServer(BattleActionPayload.TYPE, BattleActionPayload.STREAM_CODEC,
                 (payload, context) -> {
                     if (context.player() instanceof ServerPlayer player) {

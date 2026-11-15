@@ -139,3 +139,20 @@ A timeline atualmente usa nomes da previsão 1×1 (`Voce`/`Zumbi`) para escolher
 - [ ] `/battle test-rewards` continua 1x1 e concede XP/drops apenas na condição autorizada.
 
 **Limitado ao protótipo 1x2:** sem grupos verdadeiros por detecção, sem reforços, sem seleção direta do modelo 3D e sem novas recompensas no teste de grupo.
+
+## MVP 7 — Critérios de aceitação
+
+- [ ] Zumbi com alvo real, linha de visão e aggro estável inicia encontro sem comando.
+- [ ] Monstro distante, sem aggro ou atrás de parede não inicia.
+- [ ] Grupo inicial contém até 3 zumbis elegíveis e respeita orçamento e reserva exclusiva.
+- [ ] Reforços reais são anunciados previamente; nenhuma entidade nova é criada para simular a onda.
+- [ ] Respeita máximo de 2 reforços, 2 ondas, 3 ativos e 5 históricos.
+- [ ] A última morte sem reforço anunciado encerra; pendência cancelada não trava a sessão.
+- [ ] Fuga/derrota restauram IA e invulnerabilidade de sobreviventes.
+- [ ] Vitória concede XP/drops uma única vez; não se acumula loot vanilla.
+- [ ] Cooldown de 15s só impede encontros RPG; não concede invulnerabilidade fora da batalha.
+- [ ] Comando administrativo auto off/on funciona, sem interferir nos testes manuais.
+- [ ] Login/logout, troca de dimensão, crash e recuperação de chunk limpam reservas.
+- [ ] HUD, seleção de alvos, resultado pós-batalha e duas câmeras continuam funcionando.
+
+Primeiro teste deve ser em terreno plano/noite e mundo descartável. É necessária validação separada em servidor dedicado.

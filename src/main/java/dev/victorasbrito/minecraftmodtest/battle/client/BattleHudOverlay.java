@@ -89,7 +89,9 @@ public final class BattleHudOverlay {
         drawActions(g, mc, state, layout.actions(), layout.compact());
 
         // Log discreto, sem painéis centrais grandes que escondam o terreno.
-        String message = state.finished() ? resultName(state.outcome()) : state.combatLog();
+        String message = state.reinforcementPending()
+                ? "Reforço se aproximando: " + state.reinforcementActionsRemaining() + " ações"
+                : state.finished() ? resultName(state.outcome()) : state.combatLog();
         if (message != null && !message.isBlank()) {
             int maxWidth = Math.min(w - 24, 360);
             String line = mc.font.plainSubstrByWidth(message, maxWidth - 18);
@@ -113,7 +115,11 @@ public final class BattleHudOverlay {
         int x = 12;
         int y = 10;
         int panelWidth = count * step + 13;
-        panel(g, x - 5, y - 5, panelWidth, size + 20, false);
+        panel(g, x - 5, y - 5, panelWidth + (state.reinforcementPending() ? 30 : 0),
+                size + 20, false);
+        if (state.reinforcementPending()) {
+            g.drawCenteredString(mc.font, "!", x + panelWidth + 5, y + size / 2 - 4, GOLD);
+        }
 
         for (int i = 0; i < count; i++) {
             int px = x + i * step;

@@ -46,7 +46,8 @@ class BattleMultiTargetTest {
     }
 
     @Test void rejectsUnsupportedEnemyCounts() {
+        assertEquals(5, new BattleEngine(120,70,5).enemyCount());
         assertThrows(IllegalArgumentException.class, ()->new BattleEngine(120,70,0));
-        assertThrows(IllegalArgumentException.class, ()->new BattleEngine(120,70,4));
+        assertThrows(IllegalArgumentException.class, ()->new BattleEngine(120,70,6));
     }
 }
