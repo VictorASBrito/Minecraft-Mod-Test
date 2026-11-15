@@ -7,6 +7,7 @@ import dev.victorasbrito.minecraftmodtest.progression.ProgressionAttachments;
 import dev.victorasbrito.minecraftmodtest.battle.command.BattleCommands;
 import dev.victorasbrito.minecraftmodtest.battle.network.BattleNetwork;
 import dev.victorasbrito.minecraftmodtest.battle.server.BattleSessionManager;
+import dev.victorasbrito.minecraftmodtest.battle.server.BattleEncounterManager;
 import dev.victorasbrito.minecraftmodtest.battle.server.BattleWorldFixture;
 import dev.victorasbrito.minecraftmodtest.battle.server.BattleInteractionGuard;
 import net.neoforged.bus.api.IEventBus;
@@ -29,6 +30,8 @@ public final class MinecraftModTest {
         NeoForge.EVENT_BUS.addListener(BattleCommands::register);
         NeoForge.EVENT_BUS.addListener(BattleSessionManager::onLogout);
         NeoForge.EVENT_BUS.addListener(BattleSessionManager::onPlayerTick);
+        NeoForge.EVENT_BUS.addListener(BattleEncounterManager::onServerTick);
+        NeoForge.EVENT_BUS.addListener(BattleSessionManager::onChangedDimension);
         NeoForge.EVENT_BUS.addListener(BattleSessionManager::onInvulnerabilityCheck);
         NeoForge.EVENT_BUS.addListener(BattleWorldFixture::onJoin);
         NeoForge.EVENT_BUS.addListener(BattleInteractionGuard::onAttackEntity);

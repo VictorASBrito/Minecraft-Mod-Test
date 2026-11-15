@@ -22,9 +22,11 @@ public record BattleStatePayload(
         double playerX, double playerY, double playerZ,
         double enemyX, double enemyY, double enemyZ,
         int actionSequence, String resolvedAction, int resolvedTargetIndex,
-        List<TargetSnapshot> targets
+        List<TargetSnapshot> targets,
+        boolean reinforcementPending,
+        int reinforcementActionsRemaining
 ) implements CustomPacketPayload {
-    public static final int MAX_TARGETS = 3;
+    public static final int MAX_TARGETS = 5;
     public static final Type<BattleStatePayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(MinecraftModTest.MOD_ID, "battle_state"));
     public static final StreamCodec<RegistryFriendlyByteBuf, BattleStatePayload> STREAM_CODEC =
@@ -72,6 +74,8 @@ public record BattleStatePayload(
             b.writeDouble(t.y);
             b.writeDouble(t.z);
         }
+        b.writeBoolean(s.reinforcementPending);
+        b.writeVarInt(s.reinforcementActionsRemaining);
     }
 
     private static BattleStatePayload read(RegistryFriendlyByteBuf b) {
@@ -93,9 +97,11 @@ public record BattleStatePayload(
             targets.add(new TargetSnapshot(b.readVarInt(),b.readVarInt(),b.readUtf(48),b.readBoolean(),
                     b.readDouble(),b.readDouble(),b.readDouble()));
         }
+        boolean pending=b.readBoolean();
+        int remaining=b.readVarInt();
         return new BattleStatePayload(id,turn,hp,maxHp,ps,es,pg,eg,
                 guard,playerTurn,outcome,log,preview,px,py,pz,ex,ey,ez,
-                sequence,action,resolved,targets);
+                sequence,action,resolved,targets,pending,remaining);
     }
 
     public boolean finished() { return !"ACTIVE".equals(outcome); }

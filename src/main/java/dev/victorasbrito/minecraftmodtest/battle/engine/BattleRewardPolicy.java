@@ -19,6 +19,19 @@ public final class BattleRewardPolicy {
         return new RewardDefinition(0, 0);
     }
 
+    /**
+     * Um encontro por aggro real, concluido em vitoria, paga somente pelo
+     * resultado do RPG; zombies discardados NAO geram drops vanilla.
+     * Limite protege contra entidades malformadas e exploits de grupo.
+     */
+    public static RewardDefinition forNaturalVictory(BattleEngine.Outcome outcome, int defeated) {
+        if (outcome != BattleEngine.Outcome.VICTORY || defeated <= 0) {
+            return new RewardDefinition(0,0);
+        }
+        int count=Math.min(defeated,5);
+        return new RewardDefinition(count * DEBUG_XP, count * DEBUG_ROTTEN_FLESH);
+    }
+
     public record RewardDefinition(int experience, int rottenFlesh) {
         public RewardDefinition {
             if (experience < 0 || rottenFlesh < 0) {
