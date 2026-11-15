@@ -57,8 +57,10 @@ public final class BattleHudLayout {
         int gap = 6;
         int columns = Math.min(count,screenWidth >= 700 ? 3 : 2);
         int cardWidth = Math.min(116,(screenWidth-24-(columns-1)*gap)/columns);
-        int col=index%columns;
         int row=index/columns;
+        int rowSize=Math.min(columns,count-row*columns);
+        int startColumn=columns-rowSize;
+        int col=startColumn+index%columns;
         int x=screenWidth-10-columns*cardWidth-(columns-1)*gap
                 +col*(cardWidth+gap);
         int y=(screenWidth<600?67:14)+row*43;

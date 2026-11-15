@@ -71,10 +71,13 @@ public final class BattleEncounterManager {
                     .thenComparing(mob -> mob.getUUID().toString()));
 
             for (Zombie zombie : local) {
-                if (!eligibleZombie(player, zombie, EncounterRules.TRIGGER_RADIUS)) continue;
+                if (!eligibleZombie(player, zombie, EncounterRules.TRIGGER_RADIUS)) {
+                    OBSERVED.remove(zombie.getUUID());
+                    continue;
+                }
                 AggroObservation previous = OBSERVED.get(zombie.getUUID());
                 if (previous == null || !previous.playerId().equals(player.getUUID())
-                        || tick - previous.lastSeen() > 10) {
+                        || tick - previous.lastSeen() > 5) {
                     OBSERVED.put(zombie.getUUID(), new AggroObservation(player.getUUID(), tick, tick));
                     continue;
                 }

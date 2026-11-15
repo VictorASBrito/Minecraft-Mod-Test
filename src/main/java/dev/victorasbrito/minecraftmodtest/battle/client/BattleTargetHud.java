@@ -15,10 +15,12 @@ public final class BattleTargetHud {
         BattleStatePayload state = ClientBattleHandler.state();
         if (state == null || state.targets().isEmpty()) return;
         Minecraft minecraft = Minecraft.getInstance();
-        for (int i = 0; i < state.targets().size(); i++) {
-            BattleStatePayload.TargetSnapshot target = state.targets().get(i);
+        var visible = state.targets().stream()
+                .filter(BattleStatePayload.TargetSnapshot::alive).toList();
+        for (int i = 0; i < visible.size(); i++) {
+            BattleStatePayload.TargetSnapshot target = visible.get(i);
             BattleHudLayout.Rect card = BattleHudLayout.targetCard(
-                    g.guiWidth(),g.guiHeight(),state.targets().size(),i);
+                    g.guiWidth(),g.guiHeight(),visible.size(),i);
             int x = card.x(), y = card.y(), right = card.right(), bottom = card.bottom();
             boolean selected = target.index() == ClientBattleHandler.selectedTarget();
             boolean hovered = card.contains(mouseX,mouseY);

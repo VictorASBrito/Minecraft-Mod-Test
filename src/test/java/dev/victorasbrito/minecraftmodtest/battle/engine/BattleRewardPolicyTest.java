@@ -16,6 +16,16 @@ class BattleRewardPolicyTest {
         assertEquals(0, result.rottenFlesh());
     }
 
+    @Test void naturalVictoriesAwardOnlyOncePerEligibleZombieWithCap() {
+        var reward=BattleRewardPolicy.forNaturalVictory(BattleEngine.Outcome.VICTORY,3);
+        assertEquals(60,reward.experience());
+        assertEquals(3,reward.rottenFlesh());
+        assertEquals(100,BattleRewardPolicy.forNaturalVictory(
+                BattleEngine.Outcome.VICTORY,50).experience());
+        assertEquals(0,BattleRewardPolicy.forNaturalVictory(
+                BattleEngine.Outcome.FLED,3).experience());
+    }
+
     @Test void fleeingOrLosingNeverRewards() {
         for (var status : new BattleEngine.Outcome[]{
                 BattleEngine.Outcome.FLED, BattleEngine.Outcome.DEFEAT,
