@@ -67,7 +67,7 @@ public final class BattleEncounterManager {
                     player.getBoundingBox().inflate(
                             EncounterRules.TRIGGER_RADIUS, EncounterRules.MAX_VERTICAL,
                             EncounterRules.TRIGGER_RADIUS));
-            local.sort(Comparator.comparingDouble(player::distanceToSqr)
+            local.sort(Comparator.<Zombie>comparingDouble(z -> player.distanceToSqr(z))
                     .thenComparing(mob -> mob.getUUID().toString()));
 
             for (Zombie zombie : local) {
@@ -119,7 +119,7 @@ public final class BattleEncounterManager {
                         EncounterRules.INITIAL_RADIUS));
         candidates.removeIf(z -> z == initiator ||
                 !eligibleZombie(player, z, EncounterRules.INITIAL_RADIUS));
-        candidates.sort(Comparator.comparingDouble(player::distanceToSqr)
+        candidates.sort(Comparator.<Zombie>comparingDouble(z -> player.distanceToSqr(z))
                 .thenComparing(z -> z.getUUID().toString()));
         int threat = EncounterRules.THREAT_ZOMBIE;
         for (Zombie zombie : candidates) {
@@ -139,7 +139,7 @@ public final class BattleEncounterManager {
                         EncounterRules.REINFORCEMENT_RADIUS, EncounterRules.MAX_VERTICAL,
                         EncounterRules.REINFORCEMENT_RADIUS));
         candidates.removeIf(z -> !eligibleZombie(player, z, EncounterRules.REINFORCEMENT_RADIUS));
-        candidates.sort(Comparator.comparingDouble(player::distanceToSqr)
+        candidates.sort(Comparator.<Zombie>comparingDouble(z -> player.distanceToSqr(z))
                 .thenComparing(z -> z.getUUID().toString()));
         return candidates.isEmpty() ? null : candidates.get(0);
     }
