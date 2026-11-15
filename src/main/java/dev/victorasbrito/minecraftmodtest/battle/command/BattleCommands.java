@@ -18,6 +18,11 @@ public final class BattleCommands {
                     BattleSessionManager.startOrResume(player);
                     return Command.SINGLE_SUCCESS;
                 }))
+                .then(Commands.literal("test-group").executes(ctx -> {
+                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                    BattleSessionManager.startGroup(player);
+                    return Command.SINGLE_SUCCESS;
+                }))
                 .then(Commands.literal("test-rewards")
                         .requires(source -> source.hasPermission(2))
                         .executes(ctx -> {

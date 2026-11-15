@@ -16,6 +16,7 @@ public final class ClientBattleHandler {
     private static String appliedSessionId = "";
     private static int appliedActionSequence;
     private static int attackFocusTicks;
+    private static int selectedTarget;
 
     private ClientBattleHandler() {}
 
@@ -27,6 +28,10 @@ public final class ClientBattleHandler {
                 appliedSessionId = snapshot.sessionId();
                 appliedActionSequence = 0;
                 attackFocusTicks = 0;
+                selectedTarget = -1;
+            }
+            if (!validTarget(snapshot,selectedTarget)) {
+                selectedTarget = firstAlive(snapshot);
             }
             if (snapshot.actionSequence() > appliedActionSequence) {
                 appliedActionSequence = snapshot.actionSequence();
@@ -91,11 +96,49 @@ public final class ClientBattleHandler {
     private static void faceTarget(BattleStatePayload state) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null) return;
+        BattleStatePayload.TargetSnapshot focus = null;
+        for (var target : state.targets()) {
+            if (target.index() == state.resolvedTargetIndex()) {
+                focus = target;
+                break;
+            }
+        }
+        double targetX = focus != null ? focus.x() : state.enemyX();
+        double targetZ = focus != null ? focus.z() : state.enemyZ();
         float yaw = BattleTargeting.yawTowards(
-                state.playerX(), state.playerZ(), state.enemyX(), state.enemyZ());
+                state.playerX(), state.playerZ(), targetX, targetZ);
         minecraft.player.setYRot(yaw);
         minecraft.player.setYHeadRot(yaw);
         minecraft.player.setYBodyRot(yaw);
+    }
+
+    public static int selectedTarget() { return selectedTarget; }
+
+    public static void selectTarget(int index) {
+        if (state != null && state.playerTurn() && validTarget(state,index)) {
+            selectedTarget = index;
+        }
+    }
+
+    public static void cycleTarget() {
+        if (state == null || !state.playerTurn() || state.targets().isEmpty()) return;
+        int n = state.targets().size();
+        for (int offset = 1; offset <= n; offset++) {
+            int candidate = (Math.max(selectedTarget,0) + offset) % n;
+            if (validTarget(state,candidate)) {
+                selectedTarget = candidate;
+                return;
+            }
+        }
+    }
+
+    private static boolean validTarget(BattleStatePayload snapshot, int index) {
+        return snapshot.targets().stream().anyMatch(t -> t.index() == index && t.alive());
+    }
+
+    private static int firstAlive(BattleStatePayload snapshot) {
+        for (var t : snapshot.targets()) if (t.alive()) return t.index();
+        return -1;
     }
 
     public static void clear() {
@@ -109,5 +152,6 @@ public final class ClientBattleHandler {
         appliedSessionId = "";
         appliedActionSequence = 0;
         attackFocusTicks = 0;
+        selectedTarget = -1;
     }
 }

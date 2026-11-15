@@ -122,3 +122,20 @@ A timeline atualmente usa nomes da previsão 1×1 (`Voce`/`Zumbi`) para escolher
 - [ ] Ao vencer/fugir, tela de resultados abre normalmente e o cursor funciona em Continuar.
 - [ ] Ao fechar o resultado, controles normais, câmera e mouse retornam.
 - [ ] Testar GUI scale compacta, multiplayer e ações repetidas/atrasadas.
+
+## MVP 5 — Múltiplos alvos e escolha de inimigo
+
+- [ ] `/battle test`: permanece 1x1 e mantém o resultado com XP 0.
+- [ ] `/battle test-group`: aparecem dois zumbis visíveis e dois cartões de alvos distintos.
+- [ ] Clique no cartão Zumbi 2; Atacar/J aplica dano apenas ao Zumbi 2.
+- [ ] Tab muda o alvo selecionado sem gastar turno; Defender/K e Fugir/L continuam.
+- [ ] A linha de iniciativa mostra a identidade de cada zumbi e deixa de exibir mortos.
+- [ ] Após a morte de Zumbi 2, o cartão fica indisponível e a seleção passa para Zumbi 1.
+- [ ] Derrotar apenas um não dá vitória; após ambos, tela de resultados com 0 XP e sem itens.
+- [ ] No servidor, alvos inválidos, mortos ou pacotes repetidos não causam dano nem gastam turno.
+- [ ] A câmera enquadra o grupo em ambos os modos; o personagem vira para o alvo atacado.
+- [ ] Em terreno estreito sem espaço para 2 mobs, comando apresenta aviso e não deixa zumbi residual.
+- [ ] Ao fugir, sair do mundo ou desconectar, todos os zumbis de teste são removidos.
+- [ ] `/battle test-rewards` continua 1x1 e concede XP/drops apenas na condição autorizada.
+
+**Limitado ao protótipo 1x2:** sem grupos verdadeiros por detecção, sem reforços, sem seleção direta do modelo 3D e sem novas recompensas no teste de grupo.

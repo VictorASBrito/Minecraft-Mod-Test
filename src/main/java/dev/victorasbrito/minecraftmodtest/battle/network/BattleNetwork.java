@@ -14,7 +14,7 @@ public final class BattleNetwork {
     private BattleNetwork() {}
 
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("2"); // BattleState payload and reward protocol version 2
+        var registrar = event.registrar("3"); // Targets and selected index in payloads; protocol v3
         registrar.playToServer(BattleActionPayload.TYPE, BattleActionPayload.STREAM_CODEC,
                 (payload, context) -> {
                     if (context.player() instanceof ServerPlayer player) {

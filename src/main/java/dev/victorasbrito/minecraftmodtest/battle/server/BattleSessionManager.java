@@ -1,68 +1,82 @@
 package dev.victorasbrito.minecraftmodtest.battle.server;
 
 import dev.victorasbrito.minecraftmodtest.battle.engine.BattleEngine;
+import dev.victorasbrito.minecraftmodtest.battle.engine.BattleTargeting;
 import dev.victorasbrito.minecraftmodtest.battle.network.BattleActionPayload;
-import dev.victorasbrito.minecraftmodtest.battle.network.BattleStatePayload;
 import dev.victorasbrito.minecraftmodtest.battle.network.BattleResultPayload;
+import dev.victorasbrito.minecraftmodtest.battle.network.BattleStatePayload;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import net.minecraft.world.InteractionHand;
-import dev.victorasbrito.minecraftmodtest.battle.engine.BattleTargeting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.EntityInvulnerabilityCheckEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
- * Liga o motor deterministico ao cenario real (entidades do mapa).
- * MVP: zumbi de teste sem IA, vida e dano SIMULADOS, sem recompensas vanilla.
- * Sao preservados HP e inventario real do jogador.
+ * Uma sessao por jogador. A lista de alvos, seus indices, dano e vida ficam
+ * sob autoridade EXCLUSIVA do servidor. Cliente recebe so nomes, IDs e vivos.
  */
 public final class BattleSessionManager {
     private static final Map<UUID, Session> SESSIONS = new HashMap<>();
     private BattleSessionManager() {}
 
     public static void startOrResume(ServerPlayer player) {
-        startOrResume(player, false);
+        startOrResume(player, false, 1);
     }
 
-    /** Only an authorized operator can explicitly enable debug rewards. */
     public static void startOrResume(ServerPlayer player, boolean authorizedDebugRewards) {
-        Session existing = SESSIONS.get(player.getUUID());
-        if (existing != null) {
-            send(player, existing);
+        startOrResume(player, authorizedDebugRewards, 1);
+    }
+
+    /** Novo teste 1x2, sem XP/drops por ser um encontro ainda simulado. */
+    public static void startGroup(ServerPlayer player) {
+        startOrResume(player, false, 2);
+    }
+
+    private static void startOrResume(ServerPlayer player, boolean debugRewards, int enemyCount) {
+        Session current = SESSIONS.get(player.getUUID());
+        if (current != null) {
+            send(player, current);
             return;
         }
-
         if (!player.onGround() || player.isPassenger() || player.isSpectator()) {
             player.sendSystemMessage(Component.literal(
-                    "Inicie o teste no chao, sem estar montado ou em modo espectador."));
+                    "Inicie a batalha no chao, sem estar montado ou em modo espectador."));
             return;
         }
 
-        Zombie zombie = BattleWorldFixture.spawn(player);
-        if (zombie == null) {
-            player.sendSystemMessage(Component.literal(
-                    "Nao encontramos espaco seguro para posicionar o zumbi. Teste em terreno plano."));
-            return;
+        List<Zombie> mobs = new ArrayList<>();
+        List<Vec3> anchors = new ArrayList<>();
+        for (int i = 0; i < enemyCount; i++) {
+            Zombie mob = BattleWorldFixture.spawn(player, anchors);
+            if (mob == null) {
+                for (Zombie spawned : mobs) BattleWorldFixture.clear(spawned);
+                player.sendSystemMessage(Component.literal(
+                        "Nao foi possivel posicionar o grupo. Teste em terreno aberto e plano."));
+                return;
+            }
+            mobs.add(mob);
+            anchors.add(mob.position());
         }
 
         Vec3 anchor = player.position();
-        Session session = new Session(UUID.randomUUID().toString(), new BattleEngine(),
-                zombie, anchor, zombie.position(), authorizedDebugRewards);
+        Session session = new Session(UUID.randomUUID().toString(),
+                new BattleEngine(120,70,enemyCount), mobs, anchors, anchor, debugRewards);
         SESSIONS.put(player.getUUID(), session);
         player.setDeltaMovement(Vec3.ZERO);
-        faceEachOther(player, zombie);
+        faceEachOther(player, mobs.get(0));
         send(player, session);
     }
 
-    /** Usado somente pelos guardas de interacao no lado logico do servidor. */
     public static boolean isInBattle(ServerPlayer player) {
         return SESSIONS.containsKey(player.getUUID());
     }
@@ -83,124 +97,147 @@ public final class BattleSessionManager {
         return true;
     }
 
-    public static void onAction(ServerPlayer player, BattleActionPayload payload) {
+    public static void onAction(ServerPlayer player, BattleActionPayload packet) {
         Session session = SESSIONS.get(player.getUUID());
-        if (session == null || !session.id.equals(payload.sessionId())) return;
-        if (session.zombie.isRemoved() || !session.zombie.isAlive()) {
+        if (session == null || !session.id.equals(packet.sessionId())) return;
+        if (!worldParticipantsValid(session)) {
             cancel(player);
             return;
         }
 
         BattleEngine.Action action;
         try {
-            action = BattleEngine.Action.valueOf(payload.action());
-        } catch (IllegalArgumentException exception) {
+            action = BattleEngine.Action.valueOf(packet.action());
+        } catch (IllegalArgumentException ignored) {
             send(player, session);
             return;
         }
-        if (!session.engine.play(action, payload.turnId())) {
-            send(player, session); // Evita segundo ataque no mesmo turno.
+
+        int target = packet.targetIndex();
+        if (!session.engine.play(action, packet.turnId(), target)) {
+            send(player, session);
             return;
         }
 
-        // Animacao/visual somente apos a acao ter sido ACEITA pelo servidor.
         session.actionSequence++;
         session.resolvedAction = action.name();
+        session.resolvedTarget = action == BattleEngine.Action.ATTACK ? target : -1;
         if (action == BattleEngine.Action.ATTACK) {
-            faceEachOther(player, session.zombie);
+            Zombie mob = session.mobs.get(target);
+            faceEachOther(player, mob);
             player.swing(InteractionHand.MAIN_HAND, true);
+            if (!session.engine.isEnemyAlive(target)) BattleWorldFixture.clear(mob);
         }
 
         send(player, session);
-        if (session.engine.outcome() != BattleEngine.Outcome.ACTIVE) {
-            finish(player, session);
-        }
+        if (session.engine.outcome() != BattleEngine.Outcome.ACTIVE) finish(player, session);
     }
 
-    /** Congela apenas os participantes deste teste, nunca o servidor inteiro. */
+    private static boolean worldParticipantsValid(Session session) {
+        for (int i = 0; i < session.mobs.size(); i++) {
+            if (session.engine.isEnemyAlive(i)) {
+                Zombie mob = session.mobs.get(i);
+                if (mob.isRemoved() || !mob.isAlive()) return false;
+            }
+        }
+        return true;
+    }
+
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         Session session = SESSIONS.get(player.getUUID());
         if (session == null) return;
-        if (session.zombie.isRemoved() || !session.zombie.isAlive()) {
+        if (!worldParticipantsValid(session)) {
             cancel(player);
             return;
         }
+
         player.setDeltaMovement(Vec3.ZERO);
         if (player.position().distanceToSqr(session.playerAnchor) > 0.09) {
-            player.teleportTo(session.playerAnchor.x, session.playerAnchor.y, session.playerAnchor.z);
+            player.teleportTo(session.playerAnchor.x,session.playerAnchor.y,session.playerAnchor.z);
         }
-        session.zombie.setDeltaMovement(Vec3.ZERO);
-        if (session.zombie.position().distanceToSqr(session.enemyAnchor) > 0.04) {
-            session.zombie.teleportTo(session.enemyAnchor.x, session.enemyAnchor.y, session.enemyAnchor.z);
+        for (int i = 0; i < session.mobs.size(); i++) {
+            if (!session.engine.isEnemyAlive(i)) continue;
+            Zombie mob = session.mobs.get(i);
+            Vec3 anchor = session.enemyAnchors.get(i);
+            mob.setDeltaMovement(Vec3.ZERO);
+            if (mob.position().distanceToSqr(anchor) > 0.04) {
+                mob.teleportTo(anchor.x,anchor.y,anchor.z);
+            }
         }
     }
 
-    private static void faceEachOther(ServerPlayer player, Zombie zombie) {
-        float toEnemy = BattleTargeting.yawTowards(
-                player.getX(), player.getZ(), zombie.getX(), zombie.getZ());
-        player.setYRot(toEnemy);
-        player.setYHeadRot(toEnemy);
-        player.setYBodyRot(toEnemy);
-        zombie.setYRot(toEnemy + 180f);
-        zombie.setYBodyRot(toEnemy + 180f);
-        zombie.setYHeadRot(toEnemy + 180f);
+    private static void faceEachOther(ServerPlayer player, Zombie mob) {
+        float yaw = BattleTargeting.yawTowards(
+                player.getX(),player.getZ(),mob.getX(),mob.getZ());
+        player.setYRot(yaw);
+        player.setYHeadRot(yaw);
+        player.setYBodyRot(yaw);
+        mob.setYRot(yaw + 180f);
+        mob.setYBodyRot(yaw + 180f);
+        mob.setYHeadRot(yaw + 180f);
     }
 
     private static void send(ServerPlayer player, Session session) {
-        BattleEngine e = session.engine;
-        Vec3 a = session.playerAnchor, b = session.enemyAnchor;
-        PacketDistributor.sendToPlayer(player, new BattleStatePayload(
-                session.id, e.turnId(),
-                e.playerHp(), e.playerMaxHp(),
-                e.playerSpeed(), e.enemySpeed(), e.playerGauge(), e.enemyGauge(),
-                e.isGuarding(), e.isPlayerTurn(), e.outcome().name(),
-                e.combatLog(), e.previewTurns(5),
-                a.x, a.y, a.z, b.x, b.y, b.z,
-                session.actionSequence, session.resolvedAction
+        BattleEngine engine = session.engine;
+        List<BattleStatePayload.TargetSnapshot> targets = new ArrayList<>();
+        Vec3 middle = Vec3.ZERO;
+        int alive = 0;
+        for (int i = 0; i < session.mobs.size(); i++) {
+            Vec3 point = session.enemyAnchors.get(i);
+            boolean living = engine.isEnemyAlive(i);
+            targets.add(new BattleStatePayload.TargetSnapshot(
+                    i,session.mobs.get(i).getId(),session.mobs.size()==1 ? "Zumbi" : "Zumbi " + (i+1),
+                    living,point.x,point.y,point.z));
+            if (living) {
+                middle = middle.add(point);
+                alive++;
+            }
+        }
+        Vec3 focus = alive > 0 ? middle.scale(1.0 / alive) : session.enemyAnchors.get(0);
+        Vec3 p = session.playerAnchor;
+        PacketDistributor.sendToPlayer(player,new BattleStatePayload(
+                session.id,engine.turnId(),engine.playerHp(),engine.playerMaxHp(),
+                engine.playerSpeed(),engine.enemySpeed(),engine.playerGauge(),engine.enemyGauge(),
+                engine.isGuarding(),engine.isPlayerTurn(),engine.outcome().name(),
+                engine.combatLog(),engine.previewTurns(5),
+                p.x,p.y,p.z,focus.x,focus.y,focus.z,
+                session.actionSequence,session.resolvedAction,session.resolvedTarget,targets
         ));
     }
 
-    /**
-     * Protecao condicionada a uma batalha ATIVA, sem alterar/salvar flags do jogador.
-     * Mesmo num crash, o proximo login nao preserva invulnerabilidade artificial.
-     */
     public static void onInvulnerabilityCheck(EntityInvulnerabilityCheckEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player
-                && SESSIONS.containsKey(player.getUUID())) {
+        if (event.getEntity() instanceof ServerPlayer player && SESSIONS.containsKey(player.getUUID())) {
             event.setInvulnerable(true);
         }
     }
 
-    /**
-     * Single terminal settlement point. Atomically remove the session BEFORE
-     * issuing any reward; repeated commands/packets cannot claim it twice.
-     */
+    /** Remove sessao ANTES de qualquer XP/loot; nunca premia duas vezes. */
     private static void finish(ServerPlayer player, Session session) {
-        if (SESSIONS.remove(player.getUUID(), session)) {
-            BattleWorldFixture.clear(session.zombie);
+        if (SESSIONS.remove(player.getUUID(),session)) {
+            for (Zombie mob : session.mobs) BattleWorldFixture.clear(mob);
             BattleResultPayload receipt = BattleRewardService.settle(
-                    player, session.id, session.engine.outcome(), session.debugRewards);
-            PacketDistributor.sendToPlayer(player, receipt);
+                    player,session.id,session.engine.outcome(),session.debugRewards);
+            PacketDistributor.sendToPlayer(player,receipt);
         }
     }
 
     private static void end(ServerPlayer player, Session session) {
-        if (SESSIONS.remove(player.getUUID(), session)) {
-            BattleWorldFixture.clear(session.zombie);
+        if (SESSIONS.remove(player.getUUID(),session)) {
+            for (Zombie mob : session.mobs) BattleWorldFixture.clear(mob);
         }
     }
 
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             Session session = SESSIONS.get(player.getUUID());
-            if (session != null) end(player, session);
+            if (session != null) end(player,session);
         }
     }
 
     public static void onServerStopped(ServerStoppedEvent event) {
         for (Session session : SESSIONS.values()) {
-            BattleWorldFixture.clear(session.zombie);
+            for (Zombie mob : session.mobs) BattleWorldFixture.clear(mob);
         }
         SESSIONS.clear();
     }
@@ -208,20 +245,21 @@ public final class BattleSessionManager {
     private static final class Session {
         final String id;
         final BattleEngine engine;
-        final Zombie zombie;
+        final List<Zombie> mobs;
+        final List<Vec3> enemyAnchors;
         final Vec3 playerAnchor;
-        final Vec3 enemyAnchor;
+        final boolean debugRewards;
         int actionSequence;
         String resolvedAction = "";
-        final boolean debugRewards;
+        int resolvedTarget = -1;
 
-        Session(String id, BattleEngine engine, Zombie zombie, Vec3 playerAnchor,
-                Vec3 enemyAnchor, boolean debugRewards) {
+        Session(String id,BattleEngine engine,List<Zombie> mobs,List<Vec3> enemyAnchors,
+                Vec3 playerAnchor,boolean debugRewards) {
             this.id = id;
             this.engine = engine;
-            this.zombie = zombie;
+            this.mobs = List.copyOf(mobs);
+            this.enemyAnchors = List.copyOf(enemyAnchors);
             this.playerAnchor = playerAnchor;
-            this.enemyAnchor = enemyAnchor;
             this.debugRewards = debugRewards;
         }
     }

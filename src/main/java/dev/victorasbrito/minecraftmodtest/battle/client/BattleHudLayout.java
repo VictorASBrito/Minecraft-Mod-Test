@@ -48,6 +48,28 @@ public final class BattleHudLayout {
         return -1;
     }
 
+    /** Cartoes no alto a direita em telas largas; abaixo da timeline em telas estreitas. */
+    public static Rect targetCard(int screenWidth,int screenHeight,int count,int index) {
+        if (screenWidth < 240 || screenHeight < 160 || count < 1 || count > 3
+                || index < 0 || index >= count) {
+            throw new IllegalArgumentException("Area de alvos invalida");
+        }
+        int gap = 6;
+        int cardWidth = screenWidth < 480 ? 86 : 116;
+        int x = screenWidth - 10 - count * cardWidth - (count - 1) * gap
+                + index * (cardWidth + gap);
+        int y = screenWidth < 600 ? 67 : 14;
+        return new Rect(x,y,cardWidth,37);
+    }
+
+    public static int targetIndexAt(int width,int height,int count,double mx,double my) {
+        if (width < 240 || height < 160 || count < 1 || count > 3) return -1;
+        for (int i=0;i<count;i++) {
+            if (targetCard(width,height,count,i).contains(mx,my)) return i;
+        }
+        return -1;
+    }
+
     public record Rect(int x, int y, int width, int height) {
         public boolean contains(double px, double py) {
             return px >= x && py >= y && px < right() && py < bottom();
