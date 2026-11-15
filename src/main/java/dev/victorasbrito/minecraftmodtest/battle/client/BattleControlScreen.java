@@ -36,6 +36,7 @@ public final class BattleControlScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         BattleHudOverlay.renderForScreen(graphics);
+        BattleTargetHud.render(graphics,mouseX,mouseY);
         BattleStatePayload state = ClientBattleHandler.state();
         if (state != null && state.playerTurn() && !state.finished()) {
             int hovered = BattleHudLayout.actionIndexAt(width, height, mouseX, mouseY);
@@ -54,6 +55,15 @@ public final class BattleControlScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            BattleStatePayload snapshot = ClientBattleHandler.state();
+            if (snapshot != null) {
+                int target = BattleHudLayout.targetIndexAt(width,height,
+                        snapshot.targets().size(),mouseX,mouseY);
+                if (target >= 0) {
+                    ClientBattleHandler.selectTarget(target);
+                    return true;
+                }
+            }
             int index = BattleHudLayout.actionIndexAt(width, height, mouseX, mouseY);
             switch (index) {
                 case 0 -> ClientBattleControls.submitAction("ATTACK");

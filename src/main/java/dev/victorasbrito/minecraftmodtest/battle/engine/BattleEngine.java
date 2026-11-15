@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Motor deterministico e puro: nenhuma dependencia do cliente ou do mundo.
- * O servidor e a unica autoridade sobre vida, dano e ordem de iniciativa.
+ * Motor autoritativo e deterministico. Nao depende do Minecraft.
+ * O modo padrao 1x1 e preservado; o teste de grupos habilita 1x2.
  */
 public final class BattleEngine {
     public enum Action { ATTACK, GUARD, FLEE }
@@ -19,31 +19,51 @@ public final class BattleEngine {
     private static final int MAX_AUTOMATIC_ACTIONS = 128;
 
     private final Fighter player;
-    private final Fighter enemy;
+    private final List<Fighter> enemies = new ArrayList<>();
     private Outcome outcome = Outcome.ACTIVE;
     private boolean playerWaiting;
     private int turnId;
-    private String combatLog = "Um zumbi apareceu!";
+    private String combatLog = "Inimigos se aproximam!";
 
     public BattleEngine() {
-        this(120, 70);
+        this(120, 70, 1);
     }
 
     public BattleEngine(int playerSpeed, int enemySpeed) {
+        this(playerSpeed, enemySpeed, 1);
+    }
+
+    public BattleEngine(int playerSpeed, int enemySpeed, int enemyCount) {
         if (playerSpeed < 1 || enemySpeed < 1 || playerSpeed > 400 || enemySpeed > 400) {
             throw new IllegalArgumentException("Velocidade fora do intervalo 1..400");
         }
-        this.player = new Fighter(120, playerSpeed);
-        this.enemy = new Fighter(90, enemySpeed);
+        if (enemyCount < 1 || enemyCount > 3) {
+            throw new IllegalArgumentException("O prototipo suporta 1 a 3 inimigos");
+        }
+        player = new Fighter(120, playerSpeed);
+        for (int i = 0; i < enemyCount; i++) {
+            int speed = Math.max(1, enemySpeed - i * 10);
+            enemies.add(new Fighter(enemyCount == 1 ? 90 : 60, speed));
+        }
+        combatLog = enemyCount == 1 ? "Um zumbi apareceu!" : enemyCount + " zumbis apareceram!";
         advanceToPlayerTurn();
     }
 
-    /**
-     * Garante que um pacote antigo ou uma segunda acao no mesmo turno
-     * nao tenha efeito. O turno e validado pelo servidor.
-     */
+    /** Compatibilidade com testes e comandos 1x1 preexistentes. */
     public boolean play(Action action, int expectedTurnId) {
-        if (action == null || outcome != Outcome.ACTIVE || !playerWaiting || expectedTurnId != turnId) {
+        return play(action, expectedTurnId, firstAliveEnemy());
+    }
+
+    /**
+     * Retorna false sem consumir turno ao receber alvo invalido, morto,
+     * comando duplicado ou ID de turno obsoleto.
+     */
+    public boolean play(Action action, int expectedTurnId, int targetIndex) {
+        if (action == null || outcome != Outcome.ACTIVE || !playerWaiting
+                || expectedTurnId != turnId) {
+            return false;
+        }
+        if (action == Action.ATTACK && !isEnemyAlive(targetIndex)) {
             return false;
         }
         playerWaiting = false;
@@ -55,16 +75,18 @@ public final class BattleEngine {
         }
 
         if (action == Action.ATTACK) {
-            enemy.hp = Math.max(0, enemy.hp - PLAYER_DAMAGE);
+            Fighter target = enemies.get(targetIndex);
+            target.hp = Math.max(0, target.hp - PLAYER_DAMAGE);
             player.gauge -= ATTACK_COST;
-            combatLog = "Seu ataque causou " + PLAYER_DAMAGE + " de dano ao zumbi.";
+            combatLog = "Seu ataque causou " + PLAYER_DAMAGE + " de dano ao " + enemyName(targetIndex) + ".";
+            if (target.hp == 0) combatLog += " " + enemyName(targetIndex) + " derrotado!";
         } else if (action == Action.GUARD) {
             player.guarding = true;
             player.gauge -= GUARD_COST;
             combatLog = "Voce assumiu uma postura defensiva.";
         }
 
-        if (enemy.hp == 0) {
+        if (aliveEnemyCount() == 0) {
             outcome = Outcome.VICTORY;
             combatLog += " Vitoria!";
         } else {
@@ -80,32 +102,36 @@ public final class BattleEngine {
                 combatLog += " Derrota.";
                 return;
             }
-            if (enemy.hp <= 0) {
+            if (aliveEnemyCount() == 0) {
                 outcome = Outcome.VICTORY;
                 combatLog += " Vitoria!";
                 return;
             }
-            if (player.gauge < READY && enemy.gauge < READY) {
-                int steps = Math.min(
-                        ticksUntilReady(player.gauge, player.speed),
-                        ticksUntilReady(enemy.gauge, enemy.speed)
-                );
+
+            int[] gauges = currentGauges();
+            int selected = nextActor(gauges);
+            if (selected == Integer.MIN_VALUE) {
+                int steps = ticksUntilReady(player.gauge, player.speed);
+                for (Fighter e : enemies) {
+                    if (e.hp > 0) steps = Math.min(steps, ticksUntilReady(e.gauge, e.speed));
+                }
                 player.gauge += steps * player.speed;
-                enemy.gauge += steps * enemy.speed;
+                for (Fighter e : enemies) if (e.hp > 0) e.gauge += steps * e.speed;
+                selected = nextActor(currentGauges());
             }
 
-            if (isPlayerNext(player.gauge, player.speed, enemy.gauge, enemy.speed)) {
+            if (selected == -1) {
                 playerWaiting = true;
                 turnId++;
                 return;
             }
-
-            if (enemy.gauge >= READY) {
+            if (selected >= 0) {
+                Fighter enemy = enemies.get(selected);
                 enemy.gauge -= ATTACK_COST;
                 int damage = player.guarding ? ENEMY_DAMAGE / 2 : ENEMY_DAMAGE;
                 player.guarding = false;
                 player.hp = Math.max(0, player.hp - damage);
-                combatLog += " Zumbi causou " + damage + " de dano.";
+                combatLog += " " + enemyName(selected) + " causou " + damage + " de dano.";
             }
         }
         if (outcome == Outcome.ACTIVE) {
@@ -113,64 +139,103 @@ public final class BattleEngine {
         }
     }
 
+    private int[] currentGauges() {
+        int[] values = new int[enemies.size() + 1];
+        values[0] = player.gauge;
+        for (int i = 0; i < enemies.size(); i++) values[i + 1] = enemies.get(i).gauge;
+        return values;
+    }
+
+    /** -1=player; indices >= 0=enemies; MIN_VALUE=nobody ready. */
+    private int nextActor(int[] gauges) {
+        int best = Integer.MIN_VALUE;
+        int bestGauge = Integer.MIN_VALUE;
+        int bestSpeed = -1;
+        for (int i = -1; i < enemies.size(); i++) {
+            Fighter fighter = i == -1 ? player : enemies.get(i);
+            if (fighter.hp == 0) continue;
+            int gauge = gauges[i + 1];
+            if (gauge < READY) continue;
+            if (gauge > bestGauge || (gauge == bestGauge && fighter.speed > bestSpeed)) {
+                best = i;
+                bestGauge = gauge;
+                bestSpeed = fighter.speed;
+            }
+        }
+        return best;
+    }
+
     private static int ticksUntilReady(int gauge, int speed) {
         return Math.max(1, (READY - gauge + speed - 1) / speed);
     }
 
-    private static boolean isPlayerNext(int playerGauge, int playerSpeed, int enemyGauge, int enemySpeed) {
-        if (playerGauge < READY) return false;
-        if (enemyGauge < READY) return true;
-        if (playerGauge != enemyGauge) return playerGauge > enemyGauge;
-        return playerSpeed >= enemySpeed;
-    }
-
-    /**
-     * Previsao localmente calculada a partir do estado AUTORITATIVO do motor.
-     * Simula custos normais sem aplicar dano nem modificar o estado real.
-     */
+    /** Previsao nao mutavel para a HUD: cada zumbi possui iniciativa propria. */
     public String previewTurns(int count) {
-        int p = player.gauge;
-        int e = enemy.gauge;
+        int[] gauges = currentGauges();
         List<String> turns = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            if (p < READY && e < READY) {
-                int steps = Math.min(ticksUntilReady(p, player.speed), ticksUntilReady(e, enemy.speed));
-                p += steps * player.speed;
-                e += steps * enemy.speed;
+        for (int i = 0; i < count && outcome == Outcome.ACTIVE; i++) {
+            int actor = nextActor(gauges);
+            if (actor == Integer.MIN_VALUE) {
+                int steps = ticksUntilReady(gauges[0], player.speed);
+                for (int j = 0; j < enemies.size(); j++) {
+                    Fighter enemy = enemies.get(j);
+                    if (enemy.hp > 0) steps = Math.min(steps, ticksUntilReady(gauges[j + 1], enemy.speed));
+                }
+                gauges[0] += steps * player.speed;
+                for (int j = 0; j < enemies.size(); j++) {
+                    if (enemies.get(j).hp > 0) gauges[j + 1] += steps * enemies.get(j).speed;
+                }
+                actor = nextActor(gauges);
             }
-            if (isPlayerNext(p, player.speed, e, enemy.speed)) {
-                turns.add("Voce");
-                p -= ATTACK_COST;
-            } else {
-                turns.add("Zumbi");
-                e -= ATTACK_COST;
-            }
+            if (actor == Integer.MIN_VALUE) break;
+            turns.add(actor == -1 ? "Voce" : enemyName(actor));
+            gauges[actor + 1] -= ATTACK_COST;
         }
         return String.join(" > ", turns);
     }
+
+    private int firstAliveEnemy() {
+        for (int i = 0; i < enemies.size(); i++) if (isEnemyAlive(i)) return i;
+        return -1;
+    }
+
+    private String enemyName(int index) {
+        return enemies.size() == 1 ? "Zumbi" : "Zumbi " + (index + 1);
+    }
+
+    public int enemyCount() { return enemies.size(); }
+    public int aliveEnemyCount() {
+        int count = 0;
+        for (Fighter e : enemies) if (e.hp > 0) count++;
+        return count;
+    }
+    public boolean isEnemyAlive(int index) {
+        return index >= 0 && index < enemies.size() && enemies.get(index).hp > 0;
+    }
+    public int enemyHp(int index) { return enemies.get(index).hp; }
+    public int enemyHp() { return enemies.get(0).hp; }
+    public int enemyMaxHp() { return enemies.get(0).maxHp; }
+    public int enemyGauge() { return enemies.get(0).gauge; }
+    public int enemySpeed() { return enemies.get(0).speed; }
 
     public Outcome outcome() { return outcome; }
     public boolean isPlayerTurn() { return playerWaiting && outcome == Outcome.ACTIVE; }
     public int turnId() { return turnId; }
     public int playerHp() { return player.hp; }
-    public int enemyHp() { return enemy.hp; }
     public int playerMaxHp() { return player.maxHp; }
-    public int enemyMaxHp() { return enemy.maxHp; }
     public int playerSpeed() { return player.speed; }
-    public int enemySpeed() { return enemy.speed; }
     public int playerGauge() { return player.gauge; }
-    public int enemyGauge() { return enemy.gauge; }
     public boolean isGuarding() { return player.guarding; }
     public String combatLog() { return combatLog; }
 
     private static final class Fighter {
-        private final int maxHp;
-        private final int speed;
-        private int hp;
-        private int gauge;
-        private boolean guarding;
+        final int maxHp;
+        final int speed;
+        int hp;
+        int gauge;
+        boolean guarding;
 
-        private Fighter(int maxHp, int speed) {
+        Fighter(int maxHp, int speed) {
             this.maxHp = maxHp;
             this.hp = maxHp;
             this.speed = speed;

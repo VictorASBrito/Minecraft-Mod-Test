@@ -201,3 +201,29 @@ git pull --ff-only origin feature/battle-mouse-actions
 ```
 
 Use `/battle test` e, se quiser testar recompensas e possuir permissão de operador, `/battle test-rewards`.
+
+## Seleção de alvos e batalha 1x2 (MVP 5)
+
+Esta etapa introduz **múltiplos inimigos no motor** com iniciativa individual, mas mantém o combate no próprio mapa 3D e os ataques físicos/HP vanilla separados das regras RPG.
+
+- **`/battle test`** continua iniciando o teste 1x1 conhecido.
+- **`/battle test-group`** inicia um teste 1 jogador versus **dois zumbis** no mapa (precisa de espaço aberto para os dois).
+- Dois **cartões de alvo compactos** aparecem no alto à direita, mostrando nome, ícone e seleção, **sem revelar HP inimigo**.
+- Clique no cartão de um zumbi ou pressione **Tab** para alternar o alvo. Ao clicar **Atacar** ou pressionar **J**, apenas o zumbi selecionado recebe o dano RPG.
+- Cada zumbi possui velocidade e turno próprios; a sequência de retratos da iniciativa mostra **Zumbi 1** e **Zumbi 2** separadamente.
+- Zumbis derrotados desaparecem do mundo, seus cartões ficam inativos e eles deixam de agir. A vitória só chega quando todos estiverem derrotados.
+- O servidor valida `battleId`, `turnId`, `targetIndex` e se o alvo está vivo. Pacotes repetidos ou alvos mortos não gastam turnos nem causam dano.
+- As câmeras continuam as mesmas, agora mirando o centro do grupo; ao atacar, o avatar olha para o alvo específico.
+- O teste de grupo **não concede XP ou loot**; `/battle test-rewards` continua exclusivo para operadores na batalha 1x1, para preservar a segurança da progressão.
+
+### Teste
+```powershell
+git fetch origin
+git switch feature/battle-multi-target
+git pull --ff-only origin feature/battle-multi-target
+.\gradlew.bat runClient
+```
+
+Em local plano de um mundo de testes, execute `/battle test-group`, escolha o **Zumbi 2** pelo mouse e ataque até derrotá-lo, observando a mudança da ordem de iniciativa. Em seguida, derrote o **Zumbi 1** e confirme que a tela de resultados abre sem recompensas. Repita usando Tab e J.
+
+**Pendente:** clicar diretamente no modelo 3D do monstro, animações avançadas, encontros por aggro, reforços dinâmicos, multiplayer cooperativo e proteção especial contra obstrução da câmera em construções fechadas.

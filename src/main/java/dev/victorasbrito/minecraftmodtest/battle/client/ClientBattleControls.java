@@ -163,6 +163,10 @@ public final class ClientBattleControls {
      */
     public static boolean handleScreenKey(int keyCode, int scanCode) {
         if (!ClientBattleHandler.active()) return false;
+        if (keyCode == GLFW.GLFW_KEY_TAB) {
+            ClientBattleHandler.cycleTarget();
+            return true;
+        }
         if (SWITCH_CAMERA.matches(keyCode, scanCode)) {
             BattleViewPreference.toggle();
             var state = ClientBattleHandler.state();
@@ -196,7 +200,8 @@ public final class ClientBattleControls {
         if (actionSent) return;
         actionSent = true;
         PacketDistributor.sendToServer(new BattleActionPayload(
-                state.sessionId(), state.turnId(), action));
+                state.sessionId(), state.turnId(), action,
+                "ATTACK".equals(action) ? ClientBattleHandler.selectedTarget() : -1));
     }
 
     private static void send(String action) {

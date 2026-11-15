@@ -146,7 +146,7 @@ public final class BattleHudOverlay {
             ResourceLocation skin = mc.player.getSkin().texture();
             g.blit(skin, x, y, size, size, 8.0f, 8.0f, 8, 8, 64, 64);
             g.blit(skin, x, y, size, size, 40.0f, 8.0f, 8, 8, 64, 64);
-        } else if (label.equals("zumbi") || label.equals("zombie")) {
+        } else if (label.startsWith("zumbi") || label.startsWith("zombie")) {
             g.blit(ZOMBIE_SKIN, x, y, size, size, 8.0f, 8.0f, 8, 8, 64, 64);
         } else {
             // Fallback discreto enquanto nao temos rede com IDs de entidade.
